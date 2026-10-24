@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Tutorial interativo e apresentação sobre como criar biblioteca PCB, importar símbolo/footprint (.lbr) e vincular modelo 3D (.stl/.step) no Autodesk Fusion 360." />
+  <title>Fusion 360 PCB & 3D — Portal da Aula & Apresentação Interativa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --background: #0b1120;
+      --card: #151f32;
+      --foreground: #f8fafc;
+      --muted-foreground: #cbd5e1;
+      --border: #334155;
+    }
+    html.light-mode {
+      --background: #f1f5f9;
+      --card: #ffffff;
+      --foreground: #0f172a;
+      --muted-foreground: #334155;
+      --border: #cbd5e1;
+    }
+    body {
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      transition: background-color 0.2s, color 0.2s;
+    }
+    body.mode-slides {
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+    body.mode-website {
+      overflow-y: auto;
+      height: auto;
+      min-height: 100vh;
+    }
+    .slide-zoom-wrapper {
+      zoom: 1.3;
+    }
+    /* No modo site/apostila, todos os slides ficam visíveis um abaixo do outro */
+    body.mode-website .slide {
+      display: block !important;
+      margin-bottom: 2.5rem;
+      padding: 2rem;
+      border-radius: 1rem;
+      background-color: var(--card);
+      border: 2px solid var(--border);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+    }
+    body.mode-website #bottom-nav-bar,
+    body.mode-website #progress-bar-wrap {
+      display: none !important;
+    }
+    body.mode-website #zoom-container {
+      zoom: 1.05 !important;
+      max-width: 1200px;
+      margin: 0 auto;
+      overflow: visible !important;
+    }
+    .loc-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 0.5rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background-color: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+    html.light-mode .loc-badge {
+      background-color: rgba(37, 99, 235, 0.12);
+      color: #1d4ed8;
+      border-color: rgba(37, 99, 235, 0.35);
+    }
+    /* Estilo das Telas Simuladas do Fusion 360 */
+    .f360-window {
+      background-color: #2b2b2b;
+      color: #e5e5e5;
+      border: 2px solid #525252;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      font-family: "Segoe UI", Tahoma, sans-serif;
+    }
+    .f360-topbar {
+      background-color: #1f1f1f;
+      border-bottom: 1px solid #3d3d3d;
+      padding: 0.35rem 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.72rem;
+    }
+    .f360-ribbon {
+      background-color: #383838;
+      border-bottom: 1px solid #4a4a4a;
+      padding: 0.4rem 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+    }
+    .f360-callout {
+      border: 2px solid #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.35);
+      border-radius: 0.375rem;
+    }
+  </style>
+</head>
+<body class="mode-slides flex flex-col select-none relative">
+  <div id="presentation-box" class="w-full h-full bg-[var(--card)] text-[var(--foreground)] flex flex-col justify-between">
+    
+    <!-- Top Header & Controls (Fixo no topo também no Modo Site) -->
+    <div class="sticky top-0 z-40 border-b-2 border-[var(--border)] px-5 py-2.5 flex flex-wrap items-center justify-between gap-2 bg-[var(--background)]/95 backdrop-blur shrink-0">
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-amber-500 text-black font-extrabold text-base shadow">F360</span>
+        <div>
+          <span class="font-extrabold text-lg tracking-tight block leading-tight">Biblioteca PCB &amp; Modelos 3D (STL / STEP)</span>
+          <span id="fusion-lang-badge" class="text-xs font-bold text-amber-500">Interface do Fusion 360: Inglês (EN)</span>
+        </div>
+      </div>
+
+      <!-- Alternador Modo Slides vs Modo Site/Apostila -->
+      <div class="flex items-center gap-1 bg-[var(--card)] p-1 rounded-xl border-2 border-blue-500/50 shadow-sm">
+        <button id="btn-mode-slides" onclick="setViewMode('slides')" class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition bg-blue-500 text-white">
+          &#x1F5A5;&#xFE0F; Modo Slides
+        </button>
+        <button id="btn-mode-website" onclick="setViewMode('website')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+          &#x1F4D6; Modo Site / Apostila
+        </button>
+      </div>
+
+      <!-- Seletor de Idioma do Fusion 360 -->
+      <div class="flex items-center gap-1 bg-[var(--card)] p-1 rounded-xl border-2 border-amber-500/50 shadow-sm">
+        <span class="text-xs font-extrabold uppercase tracking-wider text-[var(--muted-foreground)] px-1.5">Fusion:</span>
+        <button id="btn-lang-en" onclick="setFusionLang('en')" class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition bg-amber-500 text-black">
+          &#x1F1FA;&#x1F1F8; EN (1)
+        </button>
+        <button id="btn-lang-pt" onclick="setFusionLang('pt')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+          &#x1F1E7;&#x1F1F7; PT (2)
+        </button>
+        <button id="btn-lang-both" onclick="setFusionLang('both')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+          &#x1F504; Ambos (3)
+        </button>
+      </div>
+
+      <!-- Botão SOS Alunos Atrasados + Controles de Projeção -->
+      <div class="flex items-center gap-2">
+        <button onclick="toggleQuickGuide()" title="Guia Rápido Assíncrono e Telas do Fusion para Alunos Atrasados (Tecla G)" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-rose-500 hover:bg-rose-400 text-white shadow transition flex items-center gap-1.5">
+          <span>&#x1F198; Perdi um Passo (G)</span>
+        </button>
+        <button onclick="goToSlide(9)" title="Ir direto para o Quiz de 10 Perguntas (Tecla Q)" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 transition">
+          &#x1F3AF; Quiz (Q)
+        </button>
+        <button id="theme-btn" onclick="toggleTheme()" title="Alternar Modo Claro/Escuro para Projetor (Tecla T)" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[var(--card)] hover:bg-[var(--border)] border-2 border-[var(--border)] transition">
+          &#x2600;&#xFE0F; Claro (T)
+        </button>
+        <div class="flex items-center gap-1 bg-[var(--card)] px-2 py-1 rounded-xl border-2 border-[var(--border)]">
+          <button onclick="adjustZoom(-0.05)" title="Diminuir Zoom (-5%)" class="px-1.5 py-0.5 rounded-lg text-xs font-extrabold hover:bg-[var(--border)] transition">A-</button>
+          <span id="zoom-label" class="text-xs font-mono px-1 text-amber-500 font-extrabold">130%</span>
+          <button onclick="adjustZoom(0.05)" title="Aumentar Zoom (+5%)" class="px-1.5 py-0.5 rounded-lg text-xs font-extrabold hover:bg-[var(--border)] transition">A+</button>
+        </div>
+        <button onclick="toggleFullScreen()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[var(--card)] hover:bg-[var(--border)] border-2 border-[var(--border)] transition">
+          &#x26F6; (F)
+        </button>
+        <span id="slide-counter" class="text-xs font-extrabold text-amber-500 bg-[var(--card)] px-3 py-1.5 rounded-xl border-2 border-[var(--border)]">Slide 1 / 10</span>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div id="progress-bar-wrap" class="w-full h-2 bg-[var(--border)] shrink-0">
+      <div id="progress-bar" class="h-full bg-amber-500 transition-all duration-300" style="width: 10%;"></div>
+    </div>
+
+    <!-- Slides Container -->
+    <div id="zoom-container" class="slide-zoom-wrapper px-10 py-4 flex-1 flex flex-col justify-center overflow-y-auto">
+
+      <!-- SLIDE 1: CAPA -->
+      <div class="slide space-y-4 w-full" data-index="0">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-amber-500/20 border-2 border-amber-500/50 text-amber-500 text-sm font-extrabold">
+            <span>Autodesk Fusion 360 Electronics &mdash; Com Telas Reais da Interface</span>
+          </div>
+          <span class="loc-badge">&#x1F5A5;&#xFE0F; Dica: Alterne entre "Modo Slides" e "Modo Site / Apostila" no topo!</span>
+        </div>
+        <h1 class="text-3xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+          Como Criar uma Biblioteca PCB, Vincular Símbolo + STL e Usar no Projeto
+        </h1>
+        <p class="text-lg lg:text-xl text-[var(--muted-foreground)] leading-relaxed">
+          Do download da simbologia (<code class="px-2 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] text-amber-500 font-bold">.lbr</code>) e malha 3D (<code class="px-2 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] text-amber-500 font-bold">.stl</code> / <code class="px-2 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] text-amber-500 font-bold">.step</code>) até a montagem na placa 3D + <strong>Quiz Final de 10 Perguntas</strong>.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-1">
+          <div class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)]">
+            <div class="text-amber-500 font-extrabold text-xs uppercase">Etapa 1</div>
+            <div class="font-extrabold text-lg mt-0.5">Download</div>
+            <div class="text-sm text-[var(--muted-foreground)] mt-1 leading-snug">Baixar arquivo <code>.LBR</code> e modelo 3D (<code>.STL</code> / <code>.STEP</code>)</div>
+          </div>
+          <div class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)]">
+            <div class="text-amber-500 font-extrabold text-xs uppercase">Etapa 2</div>
+            <div class="font-extrabold text-lg mt-0.5">Tela Biblioteca</div>
+            <div class="text-sm text-[var(--muted-foreground)] mt-1 leading-snug">
+              Importar <span class="f-term font-semibold" data-en="Symbol" data-pt="Símbolo"></span> e <span class="f-term font-semibold" data-en="Footprint" data-pt="Footprint"></span> nas 4 colunas
+            </div>
+          </div>
+          <div class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)]">
+            <div class="text-amber-500 font-extrabold text-xs uppercase">Etapa 3</div>
+            <div class="font-extrabold text-lg mt-0.5">Tela 3D (STL)</div>
+            <div class="text-sm text-[var(--muted-foreground)] mt-1 leading-snug">Converter malha STL em sólido e alinhar nos pads</div>
+          </div>
+          <div class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)]">
+            <div class="text-amber-500 font-extrabold text-xs uppercase">Etapa 4</div>
+            <div class="font-extrabold text-lg mt-0.5">Tela PCB &amp; Quiz</div>
+            <div class="text-sm text-[var(--muted-foreground)] mt-1 leading-snug">
+              Ativar no <span class="f-term font-semibold text-amber-500" data-en="Library Manager" data-pt="Gerenciador"></span>, gerar PCB 3D e responder ao Quiz
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 2: TELA GERAL DO FUSION 360 -->
+      <div class="slide hidden space-y-3 w-full" data-index="1">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-500">Tela 1 &mdash; Reconhecendo a Janela do Programa</span>
+            <h2 class="text-2xl lg:text-3xl font-extrabold">Tela do Fusion 360: Onde Fica Cada Menu e Botão</h2>
+          </div>
+          <span class="loc-badge">&#x1F5A5;&#xFE0F; Os textos da tela mudam ao clicar em EN (1) ou PT (2)!</span>
+        </div>
+
+        <div class="f360-window">
+          <div class="f360-topbar">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2 py-0.5 rounded bg-blue-600 text-white font-bold f360-callout">
+                [A] &#x229E; <span class="f-term" data-en="Data Panel" data-pt="Painel de Dados"></span>
+              </span>
+              <span class="px-2 py-0.5 rounded bg-amber-500 text-black font-extrabold f360-callout">
+                [B] &#x1F4C4; <span class="f-term" data-en="File &blacktriangledown;" data-pt="Arquivo &blacktriangledown;"></span>
+              </span>
+              <span class="px-2 py-0.5 rounded bg-neutral-700 text-neutral-200">
+                &#x1F4BE; <span class="f-term" data-en="Save (Ctrl+S)" data-pt="Salvar (Ctrl+S)"></span>
+              </span>
+              <span class="ml-3 px-2.5 py-0.5 rounded-t bg-neutral-700 text-amber-400 font-bold border-t border-x border-neutral-500">
+                &#x1F4DA; Minha_Biblioteca.lbr*
+              </span>
+            </div>
+            <div class="text-neutral-400 font-semibold">Autodesk Fusion 360</div>
+          </div>
+
+          <div class="f360-ribbon">
+            <div class="flex items-center gap-4 flex-wrap">
+              <span class="px-2.5 py-1 rounded bg-neutral-800 text-amber-400 font-bold f360-callout">
+                [C] <span class="f-term" data-en="LIBRARY" data-pt="BIBLIOTECA"></span>
+              </span>
+              <span class="text-neutral-400 font-semibold f-term" data-en="MANAGE" data-pt="GERENCIAR"></span>
+              <div class="h-4 w-px bg-neutral-600"></div>
+              <span class="px-2 py-0.5 rounded bg-emerald-600/30 border border-emerald-500 text-emerald-300 font-bold">
+                + <span class="f-term" data-en="New Component" data-pt="Novo Componente"></span>
+              </span>
+              <span class="px-2 py-0.5 rounded bg-blue-600/30 border border-blue-500 text-blue-300 font-bold">
+                + <span class="f-term" data-en="New Symbol" data-pt="Novo Símbolo"></span>
+              </span>
+              <span class="px-2 py-0.5 rounded bg-purple-600/30 border border-purple-500 text-purple-300 font-bold">
+                + <span class="f-term" data-en="New Footprint" data-pt="Novo Footprint"></span>
+              </span>
+            </div>
+            <span class="px-2.5 py-0.5 rounded bg-emerald-600 text-white font-bold">
+              [E] &#x2714; <span class="f-term" data-en="Finish" data-pt="Concluir"></span>
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-12 bg-[#252525] p-2.5 gap-2.5 text-xs">
+            <div class="md:col-span-3 bg-[#1e1e1e] border border-neutral-700 rounded p-2 flex flex-col justify-between">
+              <div>
+                <div class="font-bold text-blue-400 border-b border-neutral-700 pb-1 mb-1.5 flex items-center justify-between">
+                  <span>[A] <span class="f-term" data-en="Data Panel" data-pt="Painel de Dados"></span></span>
+                  <span class="px-1.5 py-0.5 rounded bg-blue-600 text-white text-[11px] f-term" data-en="Upload" data-pt="Carregar"></span>
+                </div>
+                <div class="space-y-1 text-neutral-300 font-mono text-[11px]">
+                  <div>&#x1F4C1; Projeto_PCB_Aula</div>
+                  <div class="pl-3 text-amber-400">&#x1F4D6; Minha_Biblioteca</div>
+                  <div class="pl-3 text-emerald-400">&#x1F4E6; modelo_3d.step</div>
+                </div>
+              </div>
+              <div class="mt-2 p-1.5 rounded bg-amber-500/20 border border-amber-500 text-amber-300 text-[11px]">
+                <strong>Menu [B] <span class="f-term" data-en="File" data-pt="Arquivo"></span>:</strong><br/>
+                &rarr; <span class="f-term font-bold" data-en="New Electronics Library" data-pt="Nova biblioteca de eletrônicos"></span>
+              </div>
+            </div>
+
+            <div class="md:col-span-9 bg-[#2d2d2d] border border-neutral-600 rounded p-2">
+              <div class="text-amber-400 font-bold mb-1.5">[D] <span class="f-term" data-en="Library Content (4 Columns)" data-pt="Conteúdo da Biblioteca (4 Colunas)"></span>:</div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div class="bg-[#1f1f1f] border-2 border-amber-500 rounded p-2">
+                  <div class="font-bold text-amber-400 f-term" data-en="1. Components" data-pt="1. Componentes"></div>
+                  <div class="mt-1 p-1 rounded bg-neutral-800 font-mono text-[11px]">ESP32-WROOM</div>
+                  <div class="mt-2 px-2 py-1 rounded bg-amber-500 text-black font-extrabold text-center f-term" data-en="Import (.lbr)" data-pt="Importar (.lbr)"></div>
+                </div>
+                <div class="bg-[#1f1f1f] border border-neutral-700 rounded p-2">
+                  <div class="font-bold text-blue-400 f-term" data-en="2. Symbols" data-pt="2. Símbolos"></div>
+                  <div class="mt-1 p-1 rounded bg-neutral-800 font-mono text-[11px]">ESP32_SYM</div>
+                </div>
+                <div class="bg-[#1f1f1f] border-2 border-emerald-500 rounded p-2">
+                  <div class="font-bold text-emerald-400 f-term" data-en="3. Footprints" data-pt="3. Footprints"></div>
+                  <div class="mt-1 p-1 rounded bg-neutral-800 font-mono text-[11px]">MOD_ESP32</div>
+                  <div class="mt-2 px-1.5 py-1 rounded bg-emerald-600 text-white font-bold text-center text-[11px] f-term" data-en="Right-Click &rarr; 3D" data-pt="Botão Direito &rarr; 3D"></div>
+                </div>
+                <div class="bg-[#1f1f1f] border border-neutral-700 rounded p-2">
+                  <div class="font-bold text-purple-400 f-term" data-en="4. Packages (3D)" data-pt="4. Pacotes 3D"></div>
+                  <div class="mt-1 p-1 rounded bg-neutral-800 font-mono text-[11px]">MOD_ESP32_3D</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 3: ESTRUTURA DE 3 PILARES -->
+      <div class="slide hidden space-y-4 w-full" data-index="2">
+        <div>
+          <span class="text-sm font-extrabold uppercase tracking-wider text-amber-500">Conceito Fundamental</span>
+          <h2 class="text-2xl lg:text-3xl font-extrabold mt-0.5">Os 3 Pilares de um Componente no Fusion 360</h2>
+          <p class="text-base text-[var(--muted-foreground)]">
+            O <strong class="text-amber-500 f-term" data-en="Component (Device)" data-pt="Componente (Dispositivo)"></strong> conecta três elementos na sua biblioteca:
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)] flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-extrabold px-3 py-1 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/40 f-term" data-en="1. Symbol" data-pt="1. Símbolo"></span>
+                <span class="text-xs font-bold text-[var(--muted-foreground)] f-term" data-en="Schematic" data-pt="Esquemático"></span>
+              </div>
+              <div class="my-2.5 p-2 rounded-xl bg-[var(--card)] border border-[var(--border)] flex justify-center">
+                <svg width="170" height="72" viewBox="0 0 180 80">
+                  <rect x="45" y="12" width="90" height="56" fill="none" stroke="#60a5fa" stroke-width="2.5" rx="4"/>
+                  <line x1="15" y1="26" x2="45" y2="26" stroke="#ef4444" stroke-width="2.5"/>
+                  <circle cx="15" cy="26" r="3.5" fill="#ef4444"/>
+                  <text x="52" y="30" fill="#60a5fa" font-size="11" font-family="monospace" font-weight="bold">1 VCC</text>
+                  <line x1="15" y1="54" x2="45" y2="54" stroke="#ef4444" stroke-width="2.5"/>
+                  <circle cx="15" cy="54" r="3.5" fill="#ef4444"/>
+                  <text x="52" y="58" fill="#60a5fa" font-size="11" font-family="monospace" font-weight="bold">2 GND</text>
+                  <line x1="135" y1="40" x2="165" y2="40" stroke="#ef4444" stroke-width="2.5"/>
+                  <circle cx="165" cy="40" r="3.5" fill="#ef4444"/>
+                  <text x="98" y="44" fill="#60a5fa" font-size="11" font-family="monospace" font-weight="bold">OUT 3</text>
+                </svg>
+              </div>
+              <p class="text-lg font-extrabold">Representação Lógica</p>
+              <p class="text-sm text-[var(--muted-foreground)] mt-1 leading-snug">Desenho elétrico onde ligamos os fios no esquema.</p>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)] flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-extrabold px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 f-term" data-en="2. Footprint" data-pt="2. Footprint (Padrão)"></span>
+                <span class="text-xs font-bold text-[var(--muted-foreground)] f-term" data-en="2D PCB" data-pt="PCB 2D"></span>
+              </div>
+              <div class="my-2.5 p-2 rounded-xl bg-[var(--card)] border border-[var(--border)] flex justify-center">
+                <svg width="170" height="72" viewBox="0 0 180 80">
+                  <rect x="48" y="14" width="84" height="52" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="4 2"/>
+                  <rect x="34" y="20" width="22" height="12" rx="2" fill="#ef4444"/>
+                  <text x="41" y="29" fill="#ffffff" font-size="9" font-family="monospace" font-weight="bold">1</text>
+                  <rect x="34" y="48" width="22" height="12" rx="2" fill="#ef4444"/>
+                  <text x="41" y="57" fill="#ffffff" font-size="9" font-family="monospace" font-weight="bold">2</text>
+                  <rect x="124" y="34" width="22" height="12" rx="2" fill="#ef4444"/>
+                  <text x="131" y="43" fill="#ffffff" font-size="9" font-family="monospace" font-weight="bold">3</text>
+                  <circle cx="62" cy="24" r="3" fill="#10b981"/>
+                </svg>
+              </div>
+              <p class="text-lg font-extrabold">Padrão de Solda (Pads)</p>
+              <p class="text-sm text-[var(--muted-foreground)] mt-1 leading-snug">Ilhas de cobre em tamanho real (mm) onde a peça será soldada.</p>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)] flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-extrabold px-3 py-1 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-500/40 f-term" data-en="3. Package 3D" data-pt="3. Pacote 3D"></span>
+                <span class="text-xs font-bold text-[var(--muted-foreground)] f-term" data-en="3D PCB" data-pt="PCB 3D"></span>
+              </div>
+              <div class="my-2.5 p-2 rounded-xl bg-[var(--card)] border border-[var(--border)] flex justify-center">
+                <svg width="170" height="72" viewBox="0 0 180 80">
+                  <polygon points="25,58 90,72 155,58 90,44" fill="#065f46" stroke="#10b981" stroke-width="1.5"/>
+                  <polygon points="55,44 90,54 125,44 90,34" fill="#334155" stroke="#cbd5e1" stroke-width="1.5"/>
+                  <polygon points="55,28 90,38 125,28 90,18" fill="#475569" stroke="#cbd5e1" stroke-width="1.5"/>
+                  <polygon points="55,28 55,44 90,54 90,38" fill="#1e293b" stroke="#cbd5e1" stroke-width="1.5"/>
+                  <polygon points="125,28 125,44 90,54 90,38" fill="#334155" stroke="#cbd5e1" stroke-width="1.5"/>
+                  <line x1="65" y1="47" x2="55" y2="54" stroke="#fbbf24" stroke-width="3"/>
+                  <line x1="80" y1="51" x2="70" y2="58" stroke="#fbbf24" stroke-width="3"/>
+                  <line x1="110" y1="49" x2="120" y2="56" stroke="#fbbf24" stroke-width="3"/>
+                </svg>
+              </div>
+              <p class="text-lg font-extrabold">Geometria Mecânica</p>
+              <p class="text-sm text-[var(--muted-foreground)] mt-1 leading-snug">Modelo <code>.STL</code> ou <code>.STEP</code> posicionado sobre os pads da placa.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 4: ONDE E COMO BAIXAR -->
+      <div class="slide hidden space-y-4 w-full" data-index="3">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <span class="text-sm font-extrabold uppercase tracking-wider text-amber-500">Passo 1</span>
+            <h2 class="text-2xl lg:text-3xl font-extrabold mt-0.5">Onde Baixar a Simbologia e o Arquivo 3D</h2>
+          </div>
+          <span class="loc-badge">&#x1F310; Clique nos links abaixo para abrir os portais</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <a href="https://www.snapeda.com" target="_blank" rel="noopener" class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)] hover:border-amber-500 transition block">
+            <div class="font-extrabold text-xl">SnapMagic (SnapEDA) &#x2197;</div>
+            <div class="text-sm text-amber-500 font-mono font-bold mt-0.5">snapeda.com</div>
+            <p class="text-sm text-[var(--muted-foreground)] mt-2 leading-snug">Catálogo gratuito com exportação direta para Fusion 360 / Eagle (<code>.lbr</code>).</p>
+          </a>
+          <a href="https://www.ultralibrarian.com" target="_blank" rel="noopener" class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)] hover:border-amber-500 transition block">
+            <div class="font-extrabold text-xl">Ultra Librarian &#x2197;</div>
+            <div class="text-sm text-amber-500 font-mono font-bold mt-0.5">ultralibrarian.com</div>
+            <p class="text-sm text-[var(--muted-foreground)] mt-2 leading-snug">Modelos oficiais dos fabricantes com pacotes 2D + 3D integrados.</p>
+          </a>
+          <a href="https://www.componentsearchengine.com" target="_blank" rel="noopener" class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)] hover:border-amber-500 transition block">
+            <div class="font-extrabold text-xl">SamacSys / GrabCAD &#x2197;</div>
+            <div class="text-sm text-amber-500 font-mono font-bold mt-0.5">componentsearchengine.com</div>
+            <p class="text-sm text-[var(--muted-foreground)] mt-2 leading-snug">Excelente para baixar modelos 3D (<code>.step</code> ou <code>.stl</code>) de conectores e módulos.</p>
+          </a>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-500/40 flex items-start gap-3">
+          <span class="font-extrabold text-amber-500 text-lg shrink-0">O que baixar:</span>
+          <p class="text-base leading-snug">
+            1) Clique em <strong>Download Symbol &amp; Footprint</strong> &rarr; escolha <strong>Autodesk Fusion 360</strong> ou <strong>Eagle (.lbr)</strong>.<br/>
+            2) Clique em <strong>Download 3D Model</strong> &rarr; baixe o arquivo <strong>.STEP</strong> (ou <strong>.STL</strong>).
+          </p>
+        </div>
+      </div>
+
+      <!-- SLIDE 5: TELA DO FUSION 360 - CRIANDO BIBLIOTECA E IMPORTANDO .LBR -->
+      <div class="slide hidden space-y-3 w-full" data-index="4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-500">Passos 2 &amp; 3 &mdash; Tela da Biblioteca Eletrônica</span>
+            <h2 class="text-2xl lg:text-3xl font-extrabold">Tela do Fusion 360: Criando a Biblioteca e Importando o .LBR</h2>
+          </div>
+          <span class="loc-badge">&#x1F4CD; Siga os destaques amarelos [1] e [2] na tela abaixo!</span>
+        </div>
+
+        <div class="f360-window">
+          <div class="f360-topbar">
+            <div class="flex items-center gap-3 flex-wrap">
+              <span class="px-2 py-0.5 rounded bg-neutral-700">&#x229E;</span>
+              <span class="px-2.5 py-0.5 rounded bg-amber-500 text-black font-extrabold f360-callout">
+                [1] &#x1F4C4; <span class="f-term" data-en="File &rarr; New Electronics Library" data-pt="Arquivo &rarr; Nova biblioteca de eletrônicos"></span>
+              </span>
+              <span class="px-2 py-0.5 rounded bg-neutral-700">&#x1F4BE; Ctrl+S</span>
+            </div>
+            <span class="text-neutral-400">Fusion 360 &mdash; Electronics Library</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-12 bg-[#252525] p-3 gap-3 text-xs relative">
+            <div class="md:col-span-3 bg-[#1e1e1e] border-2 border-amber-500 rounded p-2.5 flex flex-col justify-between">
+              <div>
+                <div class="font-bold text-amber-400 uppercase text-[11px] f-term" data-en="Column 1: Components" data-pt="Coluna 1: Componentes"></div>
+                <div class="mt-2 p-1.5 rounded bg-blue-600/30 border border-blue-400 text-white font-mono text-[11px]">
+                  &#x2714; ESP32-WROOM-32
+                </div>
+              </div>
+              <div class="mt-3 p-1.5 rounded bg-amber-500 text-black font-extrabold text-center f360-callout">
+                [2] &#x1F4E5; <span class="f-term" data-en="Import" data-pt="Importar"></span>
+              </div>
+            </div>
+
+            <div class="md:col-span-5 bg-[#333333] border-2 border-amber-400 rounded-lg p-3 shadow-2xl space-y-2">
+              <div class="font-bold text-white border-b border-neutral-500 pb-1 flex items-center justify-between">
+                <span class="f-term" data-en="Import Component into Library" data-pt="Importar Componente na Biblioteca"></span>
+                <span class="text-neutral-400">&#x2715;</span>
+              </div>
+              <p class="text-[11px] text-neutral-300">
+                <span class="f-term" data-en="Click below to select the downloaded .lbr file from your computer:" data-pt="Clique abaixo para escolher o arquivo .lbr baixado no seu PC:"></span>
+              </p>
+              <div class="p-2 rounded bg-amber-500/20 border-2 border-amber-400 text-amber-300 font-bold text-center">
+                &#x1F4C2; <span class="f-term" data-en="Open from local disk... (ESP32.lbr)" data-pt="Abrir do disco local... (ESP32.lbr)"></span>
+              </div>
+              <div class="flex justify-end gap-2 pt-1">
+                <span class="px-2.5 py-0.5 rounded bg-neutral-600 text-neutral-200 f-term" data-en="Cancel" data-pt="Cancelar"></span>
+                <span class="px-3 py-0.5 rounded bg-blue-600 text-white font-bold">OK</span>
+              </div>
+            </div>
+
+            <div class="md:col-span-4 bg-[#1e1e1e] border border-neutral-700 rounded p-2.5 space-y-2">
+              <div class="font-bold text-emerald-400 text-[11px] f-term" data-en="Auto-filled Columns:" data-pt="Colunas Preenchidas Automaticamente:"></div>
+              <div class="p-1.5 rounded bg-neutral-800 border border-neutral-700">
+                <span class="text-blue-400 font-bold f-term" data-en="Symbols:" data-pt="Símbolos:"></span> <span class="font-mono">ESP32-WROOM</span> &#x2714;
+              </div>
+              <div class="p-1.5 rounded bg-neutral-800 border border-neutral-700">
+                <span class="text-emerald-400 font-bold f-term" data-en="Footprints:" data-pt="Footprints:"></span> <span class="font-mono">MODULE_ESP32</span> &#x2714;
+              </div>
+              <div class="p-1.5 rounded bg-neutral-800 border border-dashed border-amber-500 text-amber-400">
+                <span class="font-bold f-term" data-en="Packages (3D):" data-pt="Pacotes 3D:"></span> <span class="f-term" data-en="Next Slide &rarr;" data-pt="Próximo Slide &rarr;"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 6: TELA DO EDITOR 3D DO FUSION 360 -->
+      <div class="slide hidden space-y-2.5 w-full" data-index="5">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-500">Passo 4 &mdash; Tela do Editor 3D Package</span>
+            <h2 class="text-2xl lg:text-3xl font-extrabold">Tela do Fusion 360: Inserindo o .STL, Alinhando e Convertendo</h2>
+          </div>
+          <span class="loc-badge">&#x1F4CD; Botão direito no Footprint &rarr; Abre esta tela 3D!</span>
+        </div>
+
+        <div class="f360-window">
+          <div class="f360-ribbon">
+            <div class="flex items-center gap-3 flex-wrap">
+              <span class="px-2 py-0.5 rounded bg-neutral-700 text-white font-bold f-term" data-en="SOLID" data-pt="SÓLIDO"></span>
+              <span class="px-2.5 py-0.5 rounded bg-amber-500 text-black font-extrabold f360-callout">
+                [3] <span class="f-term" data-en="MESH &rarr; Modify &rarr; Convert Mesh" data-pt="MALHA &rarr; Modificar &rarr; Converter malha"></span>
+              </span>
+              <div class="h-4 w-px bg-neutral-500"></div>
+              <span class="px-2.5 py-0.5 rounded bg-blue-600 text-white font-extrabold f360-callout">
+                [1] <span class="f-term" data-en="Insert &rarr; Insert Mesh (.STL)" data-pt="Inserir &rarr; Inserir malha (.STL)"></span>
+              </span>
+            </div>
+            <span class="px-3 py-0.5 rounded bg-emerald-600 text-white font-extrabold f360-callout">
+              [4] &#x2714; <span class="f-term" data-en="FINISH" data-pt="CONCLUIR"></span>
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-12 bg-[#222629] p-3 gap-3 text-xs relative">
+            <div class="md:col-span-3 bg-[#1b1e20] border border-neutral-700 rounded p-2 space-y-1.5">
+              <div class="font-bold text-neutral-300 border-b border-neutral-700 pb-1">BROWSER</div>
+              <div class="font-mono text-[11px] text-neutral-400">&#x1F4C1; Origin (Z=0)</div>
+              <div class="font-mono text-[11px] text-amber-400 font-bold">&#x1F9CA; Bodies (Mesh / Solid)</div>
+              <div class="mt-2 p-1.5 rounded bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-[11px]">
+                <strong>Se for .STEP:</strong><br/>
+                <span class="f-term" data-en="Right-click in Data Panel [A] &rarr; Insert into current design" data-pt="Botão direito no Painel de Dados [A] &rarr; Inserir no projeto atual"></span>
+              </div>
+            </div>
+
+            <div class="md:col-span-5 bg-[#181b1d] border border-neutral-700 rounded p-2 flex flex-col items-center justify-between relative">
+              <div class="self-end px-2 py-0.5 rounded bg-neutral-700 text-xs font-mono text-neutral-200 border border-neutral-500">
+                &#x1F9CA; TOP / FRONT
+              </div>
+              <svg width="210" height="95" viewBox="0 0 210 95">
+                <polygon points="20,72 105,88 190,72 105,56" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+                <polygon points="55,68 70,71 78,67 63,64" fill="#ef4444"/>
+                <polygon points="130,68 145,71 153,67 138,64" fill="#ef4444"/>
+                <rect x="65" y="32" width="80" height="28" rx="3" fill="#475569" stroke="#f59e0b" stroke-width="2"/>
+                <line x1="72" y1="60" x2="66" y2="68" stroke="#fbbf24" stroke-width="3.5"/>
+                <line x1="138" y1="60" x2="144" y2="68" stroke="#fbbf24" stroke-width="3.5"/>
+                <line x1="105" y1="55" x2="105" y2="10" stroke="#3b82f6" stroke-width="2.5"/>
+                <polygon points="105,4 100,13 110,13" fill="#3b82f6"/>
+                <text x="112" y="15" fill="#60a5fa" font-size="11" font-weight="bold">Eixo Z</text>
+              </svg>
+              <div class="text-[11px] text-amber-400 font-bold">
+                Tecla <code>A</code> = <span class="f-term" data-en="Appearance (Paint pins/body)" data-pt="Aparência (Pintar pinos e corpo)"></span>
+              </div>
+            </div>
+
+            <div class="md:col-span-4 bg-[#2d2d2d] border-2 border-amber-500 rounded-lg p-2.5 space-y-1.5 shadow-xl">
+              <div class="font-extrabold text-amber-400 border-b border-neutral-600 pb-1 flex items-center justify-between">
+                <span>[2] <span class="f-term" data-en="INSERT MESH" data-pt="INSERIR MALHA"></span></span>
+                <span>&#x25BC;</span>
+              </div>
+              <div class="flex items-center justify-between bg-[#1f1f1f] p-1.5 rounded border border-amber-500/60">
+                <span class="f-term text-neutral-300" data-en="Unit Type:" data-pt="Tipo de Unidade:"></span>
+                <span class="font-extrabold text-amber-400 f-term" data-en="Millimeter &#x25BC;" data-pt="Milímetro &#x25BC;"></span>
+              </div>
+              <div class="grid grid-cols-2 gap-1.5 pt-1">
+                <div class="p-1.5 rounded bg-blue-600/30 border border-blue-400 text-center font-bold text-white f-term" data-en="Center" data-pt="Centralizar"></div>
+                <div class="p-1.5 rounded bg-emerald-600/40 border border-emerald-400 text-center font-extrabold text-emerald-200 f-term" data-en="Move to Ground" data-pt="Mover p/ o piso"></div>
+              </div>
+              <div class="flex justify-end pt-1">
+                <span class="px-3 py-0.5 rounded bg-blue-600 text-white font-bold">OK</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 7: TELA DO FUSION 360 - CONECTANDO PINOS -->
+      <div class="slide hidden space-y-3 w-full" data-index="6">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-500">Passo 5 &mdash; Tela do Component Editor</span>
+            <h2 class="text-2xl lg:text-3xl font-extrabold">Tela do Fusion 360: Conectando Pinos (Symbol &harr; Footprint)</h2>
+          </div>
+          <span class="loc-badge">&#x1F4CD; Duplo clique no Component [Coluna 1] abre esta tela!</span>
+        </div>
+
+        <div class="f360-window">
+          <div class="f360-topbar">
+            <span class="font-bold text-amber-400">&#x1F50C; Component Editor &mdash; ESP32-WROOM-32</span>
+            <span class="text-neutral-400">Ctrl + S para Salvar</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-12 bg-[#252525] p-3 gap-3 text-xs">
+            <div class="md:col-span-6 space-y-2">
+              <div class="grid grid-cols-2 gap-2">
+                <div class="bg-[#1e1e1e] border border-neutral-700 rounded p-2 text-center">
+                  <div class="text-blue-400 font-bold text-[11px] mb-1 f-term" data-en="Symbol Preview" data-pt="Preview do Símbolo"></div>
+                  <div class="font-mono text-[11px] text-neutral-300">[1: VCC] [2: GND] [3: OUT]</div>
+                </div>
+                <div class="bg-[#1e1e1e] border border-neutral-700 rounded p-2 text-center">
+                  <div class="text-emerald-400 font-bold text-[11px] mb-1 f-term" data-en="Footprint + 3D Preview" data-pt="Preview Footprint + 3D"></div>
+                  <div class="font-mono text-[11px] text-neutral-300">[Pad 1] [Pad 2] [Pad 3]</div>
+                </div>
+              </div>
+
+              <div class="bg-[#1e1e1e] border-2 border-amber-500 rounded p-2.5 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="font-extrabold text-amber-400 f-term" data-en="Variants Panel (Bottom-Right)" data-pt="Painel Variantes (Rodapé Direito)"></span>
+                  <span class="px-2 py-0.5 rounded bg-amber-500 text-black font-extrabold f360-callout">
+                    [1] &#x1F50C; <span class="f-term" data-en="Connect" data-pt="Conectar"></span>
+                  </span>
+                </div>
+                <div class="p-1.5 rounded bg-neutral-800 font-mono text-[11px] flex items-center justify-between">
+                  <span>MODULE_ESP32</span>
+                  <span class="text-emerald-400 font-bold">&#x2714; Footprint &nbsp;|&nbsp; &#x2714; 3D Package</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="md:col-span-6 bg-[#333333] border-2 border-amber-400 rounded-lg p-3 shadow-2xl space-y-2">
+              <div class="font-extrabold text-white border-b border-neutral-500 pb-1 flex items-center justify-between">
+                <span>[2] <span class="f-term" data-en="Window: Connect Pins to Pads" data-pt="Janela: Conectar Pinos aos Pads"></span></span>
+                <span class="text-emerald-400 text-[11px]">&#x2714; 3 / 3 Connected</span>
+              </div>
+              <div class="space-y-1.5 font-mono text-[11px]">
+                <div class="flex items-center justify-between p-1.5 rounded bg-[#1f1f1f] border border-neutral-600">
+                  <span class="text-blue-400 font-bold">G$1.VCC (Pin 1)</span>
+                  <span class="text-amber-400 font-extrabold">&harr;</span>
+                  <span class="text-emerald-400 font-bold">Pad 1 (SMD)</span>
+                  <span class="px-1.5 py-0.2 rounded bg-emerald-600/30 text-emerald-300">&#x2714;</span>
+                </div>
+                <div class="flex items-center justify-between p-1.5 rounded bg-[#1f1f1f] border border-neutral-600">
+                  <span class="text-blue-400 font-bold">G$1.GND (Pin 2)</span>
+                  <span class="text-amber-400 font-extrabold">&harr;</span>
+                  <span class="text-emerald-400 font-bold">Pad 2 (SMD)</span>
+                  <span class="px-1.5 py-0.2 rounded bg-emerald-600/30 text-emerald-300">&#x2714;</span>
+                </div>
+                <div class="flex items-center justify-between p-1.5 rounded bg-[#1f1f1f] border border-neutral-600">
+                  <span class="text-blue-400 font-bold">G$1.OUT (Pin 3)</span>
+                  <span class="text-amber-400 font-extrabold">&harr;</span>
+                  <span class="text-emerald-400 font-bold">Pad 3 (SMD)</span>
+                  <span class="px-1.5 py-0.2 rounded bg-emerald-600/30 text-emerald-300">&#x2714;</span>
+                </div>
+              </div>
+              <div class="flex items-center justify-between pt-1">
+                <span class="px-2.5 py-0.5 rounded bg-amber-500 text-black font-bold f-term" data-en="Connect" data-pt="Conectar"></span>
+                <span class="px-3 py-0.5 rounded bg-blue-600 text-white font-bold">OK</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 8: TELA DO ESQUEMÁTICO E LIBRARY MANAGER -->
+      <div class="slide hidden space-y-2.5 w-full" data-index="7">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-500">Passo 6 &mdash; Tela do Esquemático (Schematic)</span>
+            <h2 class="text-2xl lg:text-3xl font-extrabold">Tela do Fusion 360: Ativando no Library Manager e Gerando 3D</h2>
+          </div>
+          <span class="loc-badge">&#x1F5A5;&#xFE0F; Veja onde ficam os botões [1], [2], [3] e [4] na barra!</span>
+        </div>
+
+        <div class="f360-window">
+          <div class="f360-ribbon">
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <span class="px-2.5 py-1 rounded bg-emerald-600 text-white font-extrabold f360-callout">
+                [4] &#x1F500; <span class="f-term" data-en="Switch to PCB Document" data-pt="Alternar p/ documento PCB"></span>
+              </span>
+              <span class="px-2.5 py-1 rounded bg-purple-600 text-white font-extrabold f360-callout">
+                [4] &#x1F4E6; <span class="f-term" data-en="Push to 3D PCB" data-pt="Enviar para PCB 3D"></span>
+              </span>
+              <div class="h-4 w-px bg-neutral-500"></div>
+              <span class="px-2.5 py-1 rounded bg-blue-600 text-white font-extrabold f360-callout">
+                [3] &#x2795; <span class="f-term" data-en="Place Component" data-pt="Inserir componente"></span>
+              </span>
+              <span class="px-2.5 py-1 rounded bg-amber-500 text-black font-extrabold f360-callout">
+                [1] &#x1F4DA; <span class="f-term" data-en="Library &rarr; Open Library Manager" data-pt="Biblioteca &rarr; Abrir gerenciador de bibliotecas"></span>
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-12 bg-[#252525] p-3 gap-3 text-xs">
+            <div class="md:col-span-7 bg-[#333333] border-2 border-amber-400 rounded-lg p-3 shadow-xl space-y-2">
+              <div class="font-extrabold text-white border-b border-neutral-500 pb-1 flex items-center justify-between">
+                <span>[2] <span class="f-term" data-en="LIBRARY MANAGER (Tab: Hub / Cloud)" data-pt="GERENCIADOR DE BIBLIOTECAS (Aba: Hub / Nuvem)"></span></span>
+                <span>&#x2715;</span>
+              </div>
+              <div class="space-y-1.5 font-mono text-[11px]">
+                <div class="flex items-center justify-between p-2 rounded bg-[#1f1f1f] border-2 border-emerald-500">
+                  <span>&#x1F4D6; Minha_Biblioteca_PCB.lbr</span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-emerald-500 text-black font-extrabold f-term" data-en="In Use: ON &#x2714;" data-pt="Em uso: ATIVO &#x2714;"></span>
+                </div>
+                <div class="flex items-center justify-between p-1.5 rounded bg-[#1f1f1f] border border-neutral-700 opacity-70">
+                  <span>&#x1F4D6; rcl_resistors.lbr</span>
+                  <span class="px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 f-term" data-en="In Use" data-pt="Em uso"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="md:col-span-5 bg-[#1e1e1e] border border-neutral-700 rounded-lg p-2.5 space-y-1.5">
+              <div class="font-extrabold text-amber-400 text-xs">Checklist do Aluno:</div>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" class="w-4 h-4 accent-amber-500 rounded" />
+                <span><strong>[1]</strong> Abrir o <span class="f-term" data-en="Library Manager" data-pt="Gerenciador"></span></span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" class="w-4 h-4 accent-amber-500 rounded" />
+                <span><strong>[2]</strong> Marcar a chave <strong class="text-emerald-400 f-term" data-en="In Use" data-pt="Em uso"></strong></span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" class="w-4 h-4 accent-amber-500 rounded" />
+                <span><strong>[3]</strong> Inserir com <strong class="text-blue-400 f-term" data-en="Place Component" data-pt="Inserir componente"></strong></span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" class="w-4 h-4 accent-amber-500 rounded" />
+                <span><strong>[4]</strong> Clicar em <strong class="text-purple-400 f-term" data-en="Push to 3D PCB" data-pt="Enviar para PCB 3D"></strong></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 9: ERROS COMUNS E SOLUÇÕES -->
+      <div class="slide hidden space-y-4 w-full" data-index="8">
+        <div>
+          <span class="text-sm font-extrabold uppercase tracking-wider text-amber-500">Resolução de Problemas</span>
+          <h2 class="text-2xl lg:text-3xl font-extrabold mt-0.5">Erros Comuns na Aula e Como Resolver Rapidamente</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)]">
+            <div class="text-base font-extrabold text-rose-400">1. O arquivo .STL entrou Gigante ou Minúsculo</div>
+            <p class="text-sm text-[var(--muted-foreground)] mt-1 leading-snug">
+              <strong>Onde arrumar (Slide 6):</strong> Na janela lateral direita de <code class="text-amber-500 font-bold f-term" data-en="Insert Mesh" data-pt="Inserir malha"></code>, mude <code class="text-amber-500 font-bold f-term" data-en="Unit Type" data-pt="Tipo de unidade"></code> para <strong class="f-term" data-en="Millimeter" data-pt="Milímetro"></strong>.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)]">
+            <div class="text-base font-extrabold text-rose-400">2. Peça 3D flutuando ou de cabeça para baixo</div>
+            <p class="text-sm text-[var(--muted-foreground)] mt-1 leading-snug">
+              <strong>Onde arrumar (Slide 6):</strong> No painel direito do Pacote 3D, gire <code>90°</code> no arco de rotação e clique em <code class="text-amber-500 font-bold f-term" data-en="Move to Ground" data-pt="Mover para o piso"></code>.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)]">
+            <div class="text-base font-extrabold text-rose-400">3. Não consigo pintar os pinos do .STL</div>
+            <p class="text-sm text-[var(--muted-foreground)] mt-1 leading-snug">
+              <strong>Onde arrumar (Slide 6):</strong> Vá na aba superior <code class="text-amber-500 font-bold f-term" data-en="Mesh &rarr; Modify &rarr; Convert Mesh" data-pt="Malha &rarr; Modificar &rarr; Converter malha"></code> e depois aperte a tecla <code>A</code>.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)]">
+            <div class="text-base font-extrabold text-rose-400">4. Editei a biblioteca mas a placa não atualizou</div>
+            <p class="text-sm text-[var(--muted-foreground)] mt-1 leading-snug">
+              <strong>Onde arrumar (Slide 8):</strong> Salve a biblioteca (<code>Ctrl + S</code>) e, no Esquemático, clique na aba <code class="text-amber-500 font-bold f-term" data-en="Library &rarr; Update Design from Libraries" data-pt="Biblioteca &rarr; Atualizar projeto das bibliotecas"></code>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 10: QUIZ INTERATIVO DE 10 PERGUNTAS E RESUMO -->
+      <div class="slide hidden space-y-3.5 w-full" data-index="9">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Verificação e Resumo de Conteúdo</span>
+            <h2 class="text-2xl lg:text-3xl font-extrabold">Quiz Final: 10 Perguntas sobre Biblioteca PCB &amp; 3D</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="quiz-score-badge" class="px-3 py-1 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-extrabold text-sm">
+              Acertos: 0 / 10
+            </span>
+            <button onclick="toggleQuizSummary()" class="px-3 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-400 font-extrabold text-xs transition">
+              &#x1F4CB; Ver Resumo das 10 Questões
+            </button>
+            <button onclick="resetQuiz()" class="px-3 py-1 rounded-xl bg-[var(--background)] hover:bg-[var(--border)] border border-[var(--border)] text-xs font-bold transition">
+              &#x1F504; Reiniciar
+            </button>
+          </div>
+        </div>
+
+        <div id="quiz-nav-pills" class="flex items-center gap-1.5 flex-wrap"></div>
+
+        <div id="quiz-question-box" class="p-4 rounded-2xl bg-[var(--background)] border-2 border-[var(--border)] space-y-3">
+          <div id="quiz-q-title" class="text-lg font-extrabold"></div>
+          <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-2.5"></div>
+          <div id="quiz-feedback" class="hidden p-3 rounded-xl text-sm font-semibold"></div>
+          <div class="flex items-center justify-between pt-1">
+            <button onclick="changeQuizQ(-1)" id="quiz-prev-btn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--border)] transition">
+              &larr; Pergunta Anterior
+            </button>
+            <button onclick="changeQuizQ(1)" id="quiz-next-btn" class="px-4 py-1.5 rounded-lg text-xs font-extrabold bg-amber-500 text-black hover:bg-amber-400 transition">
+              Próxima Pergunta &rarr;
+            </button>
+          </div>
+        </div>
+
+        <div id="quiz-summary-box" class="hidden p-4 rounded-2xl bg-[var(--background)] border-2 border-amber-500/50 max-h-64 overflow-y-auto space-y-2 text-xs">
+          <div class="font-extrabold text-sm text-amber-500 mb-1">Resumo Geral dos Conteúdos (Gabarito Comentado):</div>
+          <div id="quiz-summary-list" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Navigation Controls (Visível no Modo Slides) -->
+    <div id="bottom-nav-bar" class="border-t-2 border-[var(--border)] px-6 py-3 flex items-center justify-between bg-[var(--background)]/80 shrink-0">
+      <div class="flex items-center gap-2.5" id="dots-container"></div>
+      <div class="text-xs font-semibold text-[var(--muted-foreground)] hidden xl:block">
+        Atalhos: <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">&larr;</kbd> <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">&rarr;</kbd> Slides &nbsp;|&nbsp; <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">G</kbd> Guia Atrasados &nbsp;|&nbsp; <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">Q</kbd> Quiz &nbsp;|&nbsp; <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">1/2/3</kbd> Idioma &nbsp;|&nbsp; <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">T</kbd> Tema
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="prev-btn" onclick="changeSlide(-1)" class="px-5 py-2 rounded-xl text-sm font-bold border-2 border-[var(--border)] bg-[var(--card)] hover:bg-[var(--border)]/60 disabled:opacity-40 disabled:pointer-events-none transition">
+          &larr; Anterior
+        </button>
+        <button id="next-btn" onclick="changeSlide(1)" class="px-6 py-2 rounded-xl text-sm font-extrabold bg-amber-500 text-black hover:bg-amber-400 disabled:opacity-40 disabled:pointer-events-none transition">
+          Próximo &rarr;
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL FLUTUANTE ASSÍNCRONO PARA ALUNOS ATRASADOS -->
+  <div id="quick-guide-modal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-6">
+    <div class="w-full max-w-5xl bg-[var(--card)] text-[var(--foreground)] border-2 border-amber-500 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-6 py-4 bg-amber-500 text-black flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xl font-extrabold">&#x1F198; Guia Rápido Assíncrono &mdash; Telas e Posições Exatas no Fusion 360</span>
+        </div>
+        <button onclick="toggleQuickGuide()" class="px-3 py-1 rounded-lg bg-black/20 hover:bg-black/30 font-extrabold text-sm">
+          &#x2715; Fechar (G ou ESC)
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4 text-sm">
+        <p class="text-[var(--muted-foreground)] font-medium">
+          Chegou atrasado ou perdeu onde clicar? Veja abaixo o resumo de cada etapa e clique em <strong>"Abrir Tela"</strong> para ver a janela correspondente do Fusion 360:
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          <div class="p-3.5 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-amber-500">1. Criar a Nova Biblioteca</span>
+              <button onclick="toggleQuickGuide(); goToSlide(4);" class="px-2 py-0.5 rounded bg-amber-500 text-black font-bold text-xs">Abrir Tela (Slide 5)</button>
+            </div>
+            <div class="text-xs font-bold text-blue-400">&#x1F4CD; Canto Superior Esquerdo (Ícone de Folha &#x1F4C4;)</div>
+            <p class="text-xs text-[var(--muted-foreground)]">
+              <strong>EN:</strong> <code>File &rarr; New Electronics Library</code><br/>
+              <strong>PT:</strong> <code>Arquivo &rarr; Nova biblioteca de eletrônicos</code> &rarr; <code>Ctrl + S</code>.
+            </p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-amber-500">2. Importar Símbolo + Footprint (.LBR)</span>
+              <button onclick="toggleQuickGuide(); goToSlide(4);" class="px-2 py-0.5 rounded bg-amber-500 text-black font-bold text-xs">Abrir Tela (Slide 5)</button>
+            </div>
+            <div class="text-xs font-bold text-blue-400">&#x1F4CD; 1ª Coluna da Esquerda (Components / Componentes)</div>
+            <p class="text-xs text-[var(--muted-foreground)]">
+              <strong>EN:</strong> Botão <code>Import &rarr; Open from local disk</code><br/>
+              <strong>PT:</strong> Botão <code>Importar &rarr; Abrir do disco local</code> (escolha o <code>.lbr</code>).
+            </p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-amber-500">3. Abrir Editor 3D do Footprint</span>
+              <button onclick="toggleQuickGuide(); goToSlide(5);" class="px-2 py-0.5 rounded bg-amber-500 text-black font-bold text-xs">Abrir Tela 3D (Slide 6)</button>
+            </div>
+            <div class="text-xs font-bold text-blue-400">&#x1F4CD; 3ª Coluna da Biblioteca (Footprints)</div>
+            <p class="text-xs text-[var(--muted-foreground)]">
+              Clique com o <strong>Botão Direito</strong> no Footprint:<br/>
+              <strong>EN:</strong> <code>Create new 3D Package from footprint</code><br/>
+              <strong>PT:</strong> <code>Criar novo pacote 3D a partir do footprint</code>
+            </p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-amber-500">4. Inserir e Converter Arquivo .STL</span>
+              <button onclick="toggleQuickGuide(); goToSlide(5);" class="px-2 py-0.5 rounded bg-amber-500 text-black font-bold text-xs">Abrir Tela 3D (Slide 6)</button>
+            </div>
+            <div class="text-xs font-bold text-blue-400">&#x1F4CD; Barra Superior (Menu Insert e Aba Mesh)</div>
+            <p class="text-xs text-[var(--muted-foreground)]">
+              1) <code>Insert &rarr; Insert Mesh</code> (<code>Inserir malha</code>) &rarr; <code>Millimeter</code> &rarr; <code>Move to Ground</code>.<br/>
+              2) Aba <code>Mesh (Malha) &rarr; Modify &rarr; Convert Mesh</code>.<br/>
+              3) Botão verde <code>Finish</code> / <code>Concluir</code> (Topo Direito).
+            </p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-amber-500">5. Conectar Pinos (Symbol &harr; Footprint)</span>
+              <button onclick="toggleQuickGuide(); goToSlide(6);" class="px-2 py-0.5 rounded bg-amber-500 text-black font-bold text-xs">Abrir Tela (Slide 7)</button>
+            </div>
+            <div class="text-xs font-bold text-blue-400">&#x1F4CD; 1ª Coluna (Duplo Clique) &rarr; Rodapé Direito</div>
+            <p class="text-xs text-[var(--muted-foreground)]">
+              Duplo clique no Componente &rarr; Tabela <code>Variants</code> (<code>Variantes</code>) &rarr; Botão <code>Connect</code> (<code>Conectar</code>) &rarr; Salvar (<code>Ctrl + S</code>).
+            </p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-amber-500">6. Ativar no Projeto e Enviar para 3D</span>
+              <button onclick="toggleQuickGuide(); goToSlide(7);" class="px-2 py-0.5 rounded bg-amber-500 text-black font-bold text-xs">Abrir Tela (Slide 8)</button>
+            </div>
+            <div class="text-xs font-bold text-blue-400">&#x1F4CD; Barra Superior do Esquemático</div>
+            <p class="text-xs text-[var(--muted-foreground)]">
+              1) <code>Library &rarr; Open Library Manager</code> &rarr; Ative <code>In Use</code> (<code>Em uso</code>).<br/>
+              2) <code>Place Component</code> &rarr; <code>Switch to PCB</code> &rarr; <code>Push to 3D PCB</code>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    let currentZoom = 1.3;
+    let currentFusionLang = 'en';
+    let isLightMode = false;
+    let currentViewMode = 'slides'; // 'slides' | 'website'
+
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const counterEl = document.getElementById('slide-counter');
+    const progressEl = document.getElementById('progress-bar');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const dotsContainer = document.getElementById('dots-container');
+    const zoomContainer = document.getElementById('zoom-container');
+    const zoomLabel = document.getElementById('zoom-label');
+    const langBadge = document.getElementById('fusion-lang-badge');
+    const themeBtn = document.getElementById('theme-btn');
+    const quickGuideModal = document.getElementById('quick-guide-modal');
+
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      document.body.classList.toggle('mode-slides', mode === 'slides');
+      document.body.classList.toggle('mode-website', mode === 'website');
+
+      const activeBtn = 'px-2.5 py-1 rounded-lg text-xs font-extrabold transition bg-blue-500 text-white';
+      const inactiveBtn = 'px-2.5 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]';
+
+      document.getElementById('btn-mode-slides').className = mode === 'slides' ? activeBtn : inactiveBtn;
+      document.getElementById('btn-mode-website').className = mode === 'website' ? activeBtn : inactiveBtn;
+      updateUI();
+    }
+
+    const quizData = [
+      {
+        q: "1. Quais são os 3 pilares que formam um Component (Device) completo na biblioteca do Fusion 360?",
+        options: [
+          "A) Symbol (Esquemático), Footprint (Pads 2D) e Package 3D (Modelo 3D)",
+          "B) Apenas o arquivo .STL e o código do Arduino",
+          "C) Somente o desenho 3D e a lista de materiais",
+          "D) Gerenciador de arquivos, Simulador e Camada de Cobre"
+        ],
+        correct: 0,
+        explanation: "Correto! O Component (Device) une o Symbol (esquemático), o Footprint (ilhas de solda 2D) e o Package 3D (.STL/.STEP)."
+      },
+      {
+        q: "2. Qual formato de arquivo baixamos no SnapMagic / Ultra Librarian para importar Símbolo + Footprint prontos?",
+        options: [
+          "A) Arquivo de imagem .PNG ou .JPG",
+          "B) Formato Autodesk Fusion 360 / Eagle (.lbr)",
+          "C) Arquivo de texto .TXT",
+          "D) Formato de áudio .WAV"
+        ],
+        correct: 1,
+        explanation: "Exato! O Fusion 360 lê nativamente bibliotecas no formato .LBR (Eagle / Fusion 360 Electronics)."
+      },
+      {
+        q: "3. Onde clicamos na tela do Fusion 360 para criar uma nova biblioteca eletrônica do zero?",
+        options: [
+          "A) No canto inferior direito (Configurações de grade)",
+          "B) No ícone de Folha no Canto Superior Esquerdo: File → New Electronics Library (Arquivo → Nova biblioteca de eletrônicos)",
+          "C) Clicando com o botão direito na área vazia e fechando o programa",
+          "D) Na aba de Renderização de Imagens"
+        ],
+        correct: 1,
+        explanation: "Perfeito! Fica no menu File (Arquivo) no canto superior esquerdo → New Electronics Library."
+      },
+      {
+        q: "4. Em qual das 4 colunas da biblioteca clicamos em 'Import' ('Importar') para carregar todo o arquivo .LBR de uma vez?",
+        options: [
+          "A) Na 1ª coluna da esquerda: Components (Componentes)",
+          "B) Apenas na última coluna da direita",
+          "C) Fora da janela da biblioteca",
+          "D) Na barra de título do Windows"
+        ],
+        correct: 0,
+        explanation: "Correto! Importando pela 1ª coluna (Components / Componentes), ele já traz o Symbol, o Footprint e as conexões juntos."
+      },
+      {
+        q: "5. Como abrimos o editor 3D para vincular um arquivo .STL ou .STEP a um Footprint já existente?",
+        options: [
+          "A) Apagando o Footprint e desenhando outro",
+          "B) Na 3ª coluna (Footprints), clicando com o Botão Direito sobre ele → Create new 3D Package from footprint",
+          "C) Pressionando Alt + F4 no teclado",
+          "D) Abrindo o bloco de notas"
+        ],
+        correct: 1,
+        explanation: "Isso mesmo! O clique com o botão direito no Footprint na 3ª coluna cria o pacote 3D já com o desenho dos pads no chão."
+      },
+      {
+        q: "6. Ao inserir um arquivo .STL (Insert Mesh / Inserir malha), o que fazer se a peça aparecer gigante ou minúscula?",
+        options: [
+          "A) Trocar de computador",
+          "B) Na janela lateral direita de Insert Mesh, mudar 'Unit Type' (Tipo de unidade) para Millimeter (Milímetro)",
+          "C) Apagar os pads da placa",
+          "D) Pintar o componente de preto"
+        ],
+        correct: 1,
+        explanation: "Exato! Quando o STL aparece gigante, é porque foi importado em Polegadas ou Metros em vez de Milímetros (Millimeter)."
+      },
+      {
+        q: "7. Qual botão garante que os pinos do modelo 3D desçam e toquem exatamente o plano dos pads (Z = 0)?",
+        options: [
+          "A) Delete Mesh (Excluir malha)",
+          "B) Center e depois Move to Ground (Centralizar e Mover para o piso)",
+          "C) Export to PDF (Exportar para PDF)",
+          "D) Zoom Window"
+        ],
+        correct: 1,
+        explanation: "Correto! 'Move to Ground' (Mover para o piso) apoia a base/pinos do componente exatamente no plano Z = 0 da placa."
+      },
+      {
+        q: "8. Como transformamos uma malha .STL em um corpo sólido para podermos pintar os pinos com a tecla 'A' (Appearance)?",
+        options: [
+          "A) Na Barra Superior: Aba Mesh (Malha) → Modify (Modificar) → Convert Mesh (Converter malha - Faceted)",
+          "B) Salvando com outro nome",
+          "C) Girando o componente em 180 graus",
+          "D) Desligando a camada 2D"
+        ],
+        correct: 0,
+        explanation: "Perfeito! Convertendo a malha (Convert Mesh) em sólido facetado, o Fusion 360 permite aplicar materiais e cores (tecla A)."
+      },
+      {
+        q: "9. Qual botão dentro do Component usamos para associar cada pino do Símbolo (VCC, GND) ao Pad físico da placa?",
+        options: [
+          "A) Botão Delete",
+          "B) Botão Connect (Conectar) no painel inferior direito (Variants / Variantes)",
+          "C) Botão Upload no Data Panel",
+          "D) Botão Print"
+        ],
+        correct: 1,
+        explanation: "Correto! O botão Connect (Conectar) faz o mapeamento elétrico entre os pinos lógicos do símbolo e os pads físicos."
+      },
+      {
+        q: "10. Após salvar a biblioteca, o que é obrigatório fazer no Esquemático para que o componente apareça para uso?",
+        options: [
+          "A) Reiniciar o Windows",
+          "B) Ir em Library → Open Library Manager (Gerenciador de Bibliotecas) e ativar a chave 'In Use' (Em uso)",
+          "C) Converter o esquemático em arquivo de áudio",
+          "D) Desinstalar as bibliotecas antigas"
+        ],
+        correct: 1,
+        explanation: "Excelente! Ativando a chave 'In Use' (Em uso) no Library Manager, a biblioteca fica disponível em 'Place Component'!"
+      }
+    ];
+
+    let currentQuizIdx = 0;
+    let userAnswers = new Array(quizData.length).fill(null);
+
+    function renderQuiz() {
+      const qObj = quizData[currentQuizIdx];
+      document.getElementById('quiz-q-title').textContent = qObj.q;
+
+      const pillsContainer = document.getElementById('quiz-nav-pills');
+      pillsContainer.innerHTML = '';
+      quizData.forEach((item, idx) => {
+        const btn = document.createElement('button');
+        const ans = userAnswers[idx];
+        let colorClass = 'bg-[var(--background)] text-[var(--muted-foreground)] border-[var(--border)]';
+        if (ans !== null) {
+          colorClass = ans === item.correct
+            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500'
+            : 'bg-rose-500/20 text-rose-400 border-rose-500';
+        }
+        if (idx === currentQuizIdx) {
+          colorClass += ' ring-2 ring-amber-500 font-extrabold';
+        }
+        btn.className = `px-2.5 py-1 rounded-lg text-xs border transition ${colorClass}`;
+        btn.textContent = `Q${idx + 1}`;
+        btn.onclick = () => {
+          currentQuizIdx = idx;
+          renderQuiz();
+        };
+        pillsContainer.appendChild(btn);
+      });
+
+      const optsContainer = document.getElementById('quiz-options');
+      optsContainer.innerHTML = '';
+      const selected = userAnswers[currentQuizIdx];
+
+      qObj.options.forEach((optText, optIdx) => {
+        const btn = document.createElement('button');
+        let style = 'bg-[var(--card)] border-[var(--border)] hover:border-amber-500 text-left';
+        if (selected !== null) {
+          if (optIdx === qObj.correct) {
+            style = 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold text-left';
+          } else if (optIdx === selected && selected !== qObj.correct) {
+            style = 'bg-rose-500/20 border-rose-500 text-rose-300 font-bold text-left';
+          } else {
+            style = 'bg-[var(--card)] border-[var(--border)] opacity-60 text-left';
+          }
+        }
+        btn.className = `p-3 rounded-xl border-2 text-sm transition ${style}`;
+        btn.textContent = optText;
+        btn.onclick = () => selectQuizAnswer(optIdx);
+        optsContainer.appendChild(btn);
+      });
+
+      const fbEl = document.getElementById('quiz-feedback');
+      if (selected !== null) {
+        fbEl.classList.remove('hidden');
+        if (selected === qObj.correct) {
+          fbEl.className = 'p-3 rounded-xl text-sm font-semibold bg-emerald-500/15 border border-emerald-500/40 text-emerald-300';
+          fbEl.innerHTML = `&#x2705; ${qObj.explanation}`;
+        } else {
+          fbEl.className = 'p-3 rounded-xl text-sm font-semibold bg-rose-500/15 border border-rose-500/40 text-rose-300';
+          fbEl.innerHTML = `&#x274C; Resposta incorreta. ${qObj.explanation}`;
+        }
+      } else {
+        fbEl.classList.add('hidden');
+      }
+
+      const correctCount = userAnswers.reduce((acc, ans, i) => acc + (ans === quizData[i].correct ? 1 : 0), 0);
+      document.getElementById('quiz-score-badge').textContent = `Acertos: ${correctCount} / ${quizData.length}`;
+
+      document.getElementById('quiz-prev-btn').disabled = currentQuizIdx === 0;
+      document.getElementById('quiz-next-btn').disabled = currentQuizIdx === quizData.length - 1;
+    }
+
+    function selectQuizAnswer(optIdx) {
+      userAnswers[currentQuizIdx] = optIdx;
+      renderQuiz();
+    }
+
+    function changeQuizQ(delta) {
+      const next = currentQuizIdx + delta;
+      if (next >= 0 && next < quizData.length) {
+        currentQuizIdx = next;
+        renderQuiz();
+      }
+    }
+
+    function resetQuiz() {
+      userAnswers = new Array(quizData.length).fill(null);
+      currentQuizIdx = 0;
+      renderQuiz();
+    }
+
+    function toggleQuizSummary() {
+      const sumBox = document.getElementById('quiz-summary-box');
+      const qBox = document.getElementById('quiz-question-box');
+      const isHidden = sumBox.classList.contains('hidden');
+      if (isHidden) {
+        const listEl = document.getElementById('quiz-summary-list');
+        listEl.innerHTML = '';
+        quizData.forEach((item) => {
+          const d = document.createElement('div');
+          d.className = 'p-2.5 rounded-xl bg-[var(--card)] border border-[var(--border)]';
+          d.innerHTML = `<div class="font-bold text-amber-500">${item.q}</div><div class="text-[var(--muted-foreground)] mt-1">&#x2714; ${item.explanation}</div>`;
+          listEl.appendChild(d);
+        });
+        sumBox.classList.remove('hidden');
+        qBox.classList.add('hidden');
+      } else {
+        sumBox.classList.add('hidden');
+        qBox.classList.remove('hidden');
+      }
+    }
+
+    function toggleQuickGuide() {
+      quickGuideModal.classList.toggle('hidden');
+    }
+
+    function toggleTheme() {
+      isLightMode = !isLightMode;
+      document.documentElement.classList.toggle('light-mode', isLightMode);
+      themeBtn.innerHTML = isLightMode
+        ? '&#x1F319; Escuro (T)'
+        : '&#x2600;&#xFE0F; Claro (T)';
+    }
+
+    function setFusionLang(lang) {
+      currentFusionLang = lang;
+      const terms = document.querySelectorAll('.f-term');
+      terms.forEach(el => {
+        const enText = el.getAttribute('data-en');
+        const ptText = el.getAttribute('data-pt');
+        if (lang === 'en') {
+          el.innerHTML = enText;
+        } else if (lang === 'pt') {
+          el.innerHTML = ptText;
+        } else {
+          el.innerHTML = enText === ptText ? enText : `${enText} <span class="opacity-75 font-normal">(${ptText})</span>`;
+        }
+      });
+
+      const activeClass = 'px-2.5 py-1 rounded-lg text-xs font-extrabold transition bg-amber-500 text-black';
+      const inactiveClass = 'px-2.5 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]';
+
+      document.getElementById('btn-lang-en').className = lang === 'en' ? activeClass : inactiveClass;
+      document.getElementById('btn-lang-pt').className = lang === 'pt' ? activeClass : inactiveClass;
+      document.getElementById('btn-lang-both').className = lang === 'both' ? activeClass : inactiveClass;
+
+      if (lang === 'en') {
+        langBadge.textContent = 'Interface do Fusion 360: Inglês (EN)';
+      } else if (lang === 'pt') {
+        langBadge.textContent = 'Interface do Fusion 360: Português (PT-BR)';
+      } else {
+        langBadge.textContent = 'Interface do Fusion 360: Inglês + Português (Ambos)';
+      }
+    }
+
+    function adjustZoom(delta) {
+      currentZoom = Math.min(1.8, Math.max(0.9, +(currentZoom + delta).toFixed(2)));
+      zoomContainer.style.zoom = currentZoom;
+      zoomLabel.textContent = `${Math.round(currentZoom * 100)}%`;
+    }
+
+    function renderDots() {
+      dotsContainer.innerHTML = '';
+      for (let i = 0; i < totalSlides; i++) {
+        const dot = document.createElement('button');
+        dot.className = i === currentSlide
+          ? 'w-9 h-3 rounded-full bg-amber-500 transition-all'
+          : 'w-3 h-3 rounded-full bg-[var(--border)] hover:bg-amber-500/50 transition-all';
+        dot.onclick = () => goToSlide(i);
+        dotsContainer.appendChild(dot);
+      }
+    }
+
+    function updateUI() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('hidden', currentViewMode === 'slides' && idx !== currentSlide);
+      });
+      counterEl.textContent = currentViewMode === 'slides'
+        ? `Slide ${currentSlide + 1} / ${totalSlides}`
+        : `Apostila Completa (${totalSlides} Seções)`;
+      progressEl.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+      prevBtn.disabled = currentSlide === 0;
+      nextBtn.disabled = currentSlide === totalSlides - 1;
+      renderDots();
+    }
+
+    function changeSlide(delta) {
+      const next = currentSlide + delta;
+      if (next >= 0 && next < totalSlides) {
+        currentSlide = next;
+        updateUI();
+      }
+    }
+
+    function goToSlide(idx) {
+      currentSlide = idx;
+      if (currentViewMode === 'website') {
+        slides[idx].scrollIntoView({ behavior: 'smooth' });
+      } else {
+        updateUI();
+      }
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !quickGuideModal.classList.contains('hidden')) {
+        toggleQuickGuide();
+        return;
+      }
+      if (e.key === 'g' || e.key === 'G') {
+        toggleQuickGuide();
+        return;
+      }
+      if (!quickGuideModal.classList.contains('hidden')) return;
+
+      if (e.key === 'ArrowRight' && currentViewMode === 'slides') changeSlide(1);
+      if (e.key === 'ArrowLeft' && currentViewMode === 'slides') changeSlide(-1);
+      if (e.key === 'f' || e.key === 'F') toggleFullScreen();
+      if (e.key === 't' || e.key === 'T') toggleTheme();
+      if (e.key === 'q' || e.key === 'Q') goToSlide(9);
+      if (e.key === '+' || e.key === '=') adjustZoom(0.05);
+      if (e.key === '-') adjustZoom(-0.05);
+      if (e.key === '1') setFusionLang('en');
+      if (e.key === '2') setFusionLang('pt');
+      if (e.key === '3') setFusionLang('both');
+    });
+
+    setFusionLang('en');
+    renderQuiz();
+    updateUI();
+  </script>
+</body>
+</html>
