@@ -110,9 +110,62 @@
       box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.35);
       border-radius: 0.375rem;
     }
+    /* Marca d'água Prof. Epaminondas A. da Silva */
+    .watermark-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-around;
+      overflow: hidden;
+      user-select: none;
+    }
+    .watermark-text {
+      font-size: 3.4rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(245, 158, 11, 0.065);
+      transform: rotate(-18deg);
+      white-space: nowrap;
+    }
+    html.light-mode .watermark-text {
+      color: rgba(15, 23, 42, 0.06);
+    }
+    .watermark-corner {
+      position: fixed;
+      bottom: 3.6rem;
+      right: 1.5rem;
+      pointer-events: none;
+      z-index: 35;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      background-color: rgba(245, 158, 11, 0.12);
+      color: rgba(245, 158, 11, 0.75);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    html.light-mode .watermark-corner {
+      background-color: rgba(15, 23, 42, 0.07);
+      color: rgba(15, 23, 42, 0.65);
+      border-color: rgba(15, 23, 42, 0.2);
+    }
   </style>
 </head>
 <body class="mode-slides flex flex-col select-none relative">
+  <!-- Marca d'água de fundo e selo de autoria -->
+  <div class="watermark-overlay" aria-hidden="true">
+    <div class="watermark-text">Prof. Epaminondas A. da Silva</div>
+    <div class="watermark-text">Prof. Epaminondas A. da Silva</div>
+  </div>
+  <div class="watermark-corner" aria-hidden="true">
+    &#x1F393; Prof. Epaminondas A. da Silva
+  </div>
   <div id="presentation-box" class="w-full h-full bg-[var(--card)] text-[var(--foreground)] flex flex-col justify-between">
     
     <!-- Top Header & Controls (Fixo no topo também no Modo Site) -->
@@ -121,7 +174,7 @@
         <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-amber-500 text-black font-extrabold text-base shadow">F360</span>
         <div>
           <span class="font-extrabold text-lg tracking-tight block leading-tight">Biblioteca PCB &amp; Modelos 3D (STL / STEP)</span>
-          <span id="fusion-lang-badge" class="text-xs font-bold text-amber-500">Interface do Fusion 360: Inglês (EN)</span>
+          <span class="text-xs font-bold text-amber-500">Prof. Epaminondas A. da Silva &nbsp;|&nbsp; <span id="fusion-lang-badge">Interface do Fusion 360: Inglês (EN)</span></span>
         </div>
       </div>
 
