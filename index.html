@@ -2,9 +2,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Tutorial interativo e apresentação sobre como criar biblioteca PCB, importar símbolo/footprint (.lbr) e vincular modelo 3D (.stl/.step) no Autodesk Fusion 360." />
-  <title>Fusion 360 PCB & 3D — Portal da Aula & Apresentação Interativa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="description" content="Tutorial interativo e apresentação sobre como criar biblioteca PCB, importar símbolo/footprint (.lbr) e vincular modelo 3D (.stl/.step) no Autodesk Fusion 360 - Prof. Epaminondas A. da Silva." />
+  <title>Fusion 360 PCB & 3D — Prof. Epaminondas A. da Silva</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root {
@@ -27,24 +27,25 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       transition: background-color 0.2s, color 0.2s;
     }
+    /* MODO 1: SLIDES PROJETOR / NOTEBOOK */
     body.mode-slides {
       overflow: hidden;
       height: 100vh;
       width: 100vw;
     }
+    .slide-zoom-wrapper {
+      zoom: 1.3;
+    }
+    /* MODO 2: SITE / APOSTILA CONTÍNUA */
     body.mode-website {
       overflow-y: auto;
       height: auto;
       min-height: 100vh;
     }
-    .slide-zoom-wrapper {
-      zoom: 1.3;
-    }
-    /* No modo site/apostila, todos os slides ficam visíveis um abaixo do outro */
     body.mode-website .slide {
       display: block !important;
-      margin-bottom: 2.5rem;
-      padding: 2rem;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
       border-radius: 1rem;
       background-color: var(--card);
       border: 2px solid var(--border);
@@ -60,6 +61,76 @@
       margin: 0 auto;
       overflow: visible !important;
     }
+
+    /* MODO 3: MÓDULO SMARTPHONE (CELULAR) */
+    body.mode-mobile {
+      overflow-y: auto;
+      height: auto;
+      min-height: 100vh;
+      padding-bottom: 4.5rem;
+    }
+    body.mode-mobile #zoom-container {
+      zoom: 1 !important;
+      padding: 0.85rem !important;
+      max-width: 480px;
+      margin: 0 auto;
+      overflow: visible !important;
+    }
+    body.mode-mobile #presentation-box {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+    /* No modo smartphone, forçamos grades para 1 coluna para leitura vertical perfeita */
+    body.mode-mobile .slide .grid {
+      grid-template-columns: 1fr !important;
+    }
+    body.mode-mobile .slide h1 {
+      font-size: 1.5rem !important;
+      line-height: 1.3 !important;
+    }
+    body.mode-mobile .slide h2 {
+      font-size: 1.25rem !important;
+      line-height: 1.3 !important;
+    }
+    body.mode-mobile .slide p {
+      font-size: 0.92rem !important;
+    }
+    body.mode-mobile .desktop-only-ctrl {
+      display: none !important;
+    }
+    body.mode-mobile #bottom-nav-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 45;
+      padding: 0.6rem 0.85rem;
+      background-color: var(--background);
+      border-top: 2px solid var(--border);
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
+    }
+    body.mode-mobile #dots-container {
+      display: none !important;
+    }
+    body.mode-mobile #mobile-bottom-actions {
+      display: flex !important;
+      width: 100%;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    body.mode-mobile .watermark-text {
+      font-size: 1.5rem !important;
+    }
+    body.mode-mobile .watermark-corner {
+      bottom: 4.2rem !important;
+      right: 0.6rem !important;
+      font-size: 0.68rem !important;
+    }
+
     .loc-badge {
       display: inline-flex;
       align-items: center;
@@ -94,6 +165,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.3rem;
       font-size: 0.72rem;
     }
     .f360-ribbon {
@@ -103,6 +176,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.3rem;
       font-size: 0.75rem;
     }
     .f360-callout {
@@ -166,62 +241,68 @@
   <div class="watermark-corner" aria-hidden="true">
     &#x1F393; Prof. Epaminondas A. da Silva
   </div>
+
   <div id="presentation-box" class="w-full h-full bg-[var(--card)] text-[var(--foreground)] flex flex-col justify-between">
     
-    <!-- Top Header & Controls (Fixo no topo também no Modo Site) -->
-    <div class="sticky top-0 z-40 border-b-2 border-[var(--border)] px-5 py-2.5 flex flex-wrap items-center justify-between gap-2 bg-[var(--background)]/95 backdrop-blur shrink-0">
-      <div class="flex items-center gap-3">
-        <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-amber-500 text-black font-extrabold text-base shadow">F360</span>
+    <!-- Top Header & Controls -->
+    <div class="sticky top-0 z-40 border-b-2 border-[var(--border)] px-3 md:px-5 py-2 flex flex-wrap items-center justify-between gap-2 bg-[var(--background)]/95 backdrop-blur shrink-0">
+      <div class="flex items-center gap-2.5">
+        <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-amber-500 text-black font-extrabold text-sm shadow">F360</span>
         <div>
-          <span class="font-extrabold text-lg tracking-tight block leading-tight">Biblioteca PCB &amp; Modelos 3D (STL / STEP)</span>
-          <span class="text-xs font-bold text-amber-500">Prof. Epaminondas A. da Silva &nbsp;|&nbsp; <span id="fusion-lang-badge">Interface do Fusion 360: Inglês (EN)</span></span>
+          <span class="font-extrabold text-sm md:text-lg tracking-tight block leading-tight">Biblioteca PCB &amp; 3D (STL / STEP)</span>
+          <span class="text-[11px] md:text-xs font-bold text-amber-500">Prof. Epaminondas A. da Silva &nbsp;|&nbsp; <span id="fusion-lang-badge">Fusion: EN</span></span>
         </div>
       </div>
 
-      <!-- Alternador Modo Slides vs Modo Site/Apostila -->
+      <!-- Alternador de Modos: Slides / Smartphone / Apostila -->
       <div class="flex items-center gap-1 bg-[var(--card)] p-1 rounded-xl border-2 border-blue-500/50 shadow-sm">
-        <button id="btn-mode-slides" onclick="setViewMode('slides')" class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition bg-blue-500 text-white">
-          &#x1F5A5;&#xFE0F; Modo Slides
+        <button id="btn-mode-slides" onclick="setViewMode('slides')" class="px-2 py-1 rounded-lg text-xs font-extrabold transition bg-blue-500 text-white">
+          &#x1F5A5;&#xFE0F; Slides
         </button>
-        <button id="btn-mode-website" onclick="setViewMode('website')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-          &#x1F4D6; Modo Site / Apostila
+        <button id="btn-mode-mobile" onclick="setViewMode('mobile')" class="px-2 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+          &#x1F4F1; Smartphone
+        </button>
+        <button id="btn-mode-website" onclick="setViewMode('website')" class="px-2 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+          &#x1F4D6; Apostila
         </button>
       </div>
 
       <!-- Seletor de Idioma do Fusion 360 -->
       <div class="flex items-center gap-1 bg-[var(--card)] p-1 rounded-xl border-2 border-amber-500/50 shadow-sm">
-        <span class="text-xs font-extrabold uppercase tracking-wider text-[var(--muted-foreground)] px-1.5">Fusion:</span>
-        <button id="btn-lang-en" onclick="setFusionLang('en')" class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition bg-amber-500 text-black">
-          &#x1F1FA;&#x1F1F8; EN (1)
+        <button id="btn-lang-en" onclick="setFusionLang('en')" class="px-2 py-1 rounded-lg text-xs font-extrabold transition bg-amber-500 text-black">
+          &#x1F1FA;&#x1F1F8; EN
         </button>
-        <button id="btn-lang-pt" onclick="setFusionLang('pt')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-          &#x1F1E7;&#x1F1F7; PT (2)
+        <button id="btn-lang-pt" onclick="setFusionLang('pt')" class="px-2 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+          &#x1F1E7;&#x1F1F7; PT
         </button>
-        <button id="btn-lang-both" onclick="setFusionLang('both')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-          &#x1F504; Ambos (3)
+        <button id="btn-lang-both" onclick="setFusionLang('both')" class="px-2 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+          &#x1F504; Ambos
         </button>
       </div>
 
-      <!-- Botão SOS Alunos Atrasados + Controles de Projeção -->
-      <div class="flex items-center gap-2">
-        <button onclick="toggleQuickGuide()" title="Guia Rápido Assíncrono e Telas do Fusion para Alunos Atrasados (Tecla G)" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-rose-500 hover:bg-rose-400 text-white shadow transition flex items-center gap-1.5">
-          <span>&#x1F198; Perdi um Passo (G)</span>
+      <!-- Botões Rápidos e Controles de Projeção -->
+      <div class="flex items-center gap-1.5">
+        <button onclick="toggleQrModal()" title="Mostrar QR Code para os alunos abrirem no Smartphone" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 transition">
+          &#x1F4F2; QR Celular
         </button>
-        <button onclick="goToSlide(9)" title="Ir direto para o Quiz de 10 Perguntas (Tecla Q)" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 transition">
-          &#x1F3AF; Quiz (Q)
+        <button onclick="toggleQuickGuide()" title="Guia Rápido Assíncrono (Tecla G)" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-rose-500 hover:bg-rose-400 text-white shadow transition">
+          &#x1F198; Guia (G)
         </button>
-        <button id="theme-btn" onclick="toggleTheme()" title="Alternar Modo Claro/Escuro para Projetor (Tecla T)" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[var(--card)] hover:bg-[var(--border)] border-2 border-[var(--border)] transition">
-          &#x2600;&#xFE0F; Claro (T)
+        <button onclick="goToSlide(9)" title="Ir para o Quiz de 10 Perguntas (Tecla Q)" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 transition">
+          &#x1F3AF; Quiz
         </button>
-        <div class="flex items-center gap-1 bg-[var(--card)] px-2 py-1 rounded-xl border-2 border-[var(--border)]">
-          <button onclick="adjustZoom(-0.05)" title="Diminuir Zoom (-5%)" class="px-1.5 py-0.5 rounded-lg text-xs font-extrabold hover:bg-[var(--border)] transition">A-</button>
+        <button id="theme-btn" onclick="toggleTheme()" title="Alternar Modo Claro/Escuro (Tecla T)" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-[var(--card)] hover:bg-[var(--border)] border border-[var(--border)] transition">
+          &#x2600;&#xFE0F;
+        </button>
+        <div class="desktop-only-ctrl flex items-center gap-1 bg-[var(--card)] px-1.5 py-1 rounded-xl border border-[var(--border)]">
+          <button onclick="adjustZoom(-0.05)" title="Diminuir Zoom (-5%)" class="px-1.5 py-0.5 rounded text-xs font-extrabold hover:bg-[var(--border)] transition">A-</button>
           <span id="zoom-label" class="text-xs font-mono px-1 text-amber-500 font-extrabold">130%</span>
-          <button onclick="adjustZoom(0.05)" title="Aumentar Zoom (+5%)" class="px-1.5 py-0.5 rounded-lg text-xs font-extrabold hover:bg-[var(--border)] transition">A+</button>
+          <button onclick="adjustZoom(0.05)" title="Aumentar Zoom (+5%)" class="px-1.5 py-0.5 rounded text-xs font-extrabold hover:bg-[var(--border)] transition">A+</button>
         </div>
-        <button onclick="toggleFullScreen()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[var(--card)] hover:bg-[var(--border)] border-2 border-[var(--border)] transition">
-          &#x26F6; (F)
+        <button onclick="toggleFullScreen()" class="desktop-only-ctrl px-2 py-1.5 rounded-xl text-xs font-bold bg-[var(--card)] hover:bg-[var(--border)] border border-[var(--border)] transition">
+          &#x26F6;
         </button>
-        <span id="slide-counter" class="text-xs font-extrabold text-amber-500 bg-[var(--card)] px-3 py-1.5 rounded-xl border-2 border-[var(--border)]">Slide 1 / 10</span>
+        <span id="slide-counter" class="text-xs font-extrabold text-amber-500 bg-[var(--card)] px-2.5 py-1.5 rounded-xl border border-[var(--border)]">1 / 10</span>
       </div>
     </div>
 
@@ -236,10 +317,10 @@
       <!-- SLIDE 1: CAPA -->
       <div class="slide space-y-4 w-full" data-index="0">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <div class="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-amber-500/20 border-2 border-amber-500/50 text-amber-500 text-sm font-extrabold">
-            <span>Autodesk Fusion 360 Electronics &mdash; Com Telas Reais da Interface</span>
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/20 border-2 border-amber-500/50 text-amber-500 text-xs md:text-sm font-extrabold">
+            <span>Autodesk Fusion 360 Electronics &mdash; Prof. Epaminondas A. da Silva</span>
           </div>
-          <span class="loc-badge">&#x1F5A5;&#xFE0F; Dica: Alterne entre "Modo Slides" e "Modo Site / Apostila" no topo!</span>
+          <span class="loc-badge">&#x1F4F1; Compatível com Projetor, Notebook e Smartphone!</span>
         </div>
         <h1 class="text-3xl lg:text-5xl font-extrabold tracking-tight leading-tight">
           Como Criar uma Biblioteca PCB, Vincular Símbolo + STL e Usar no Projeto
@@ -283,7 +364,7 @@
             <span class="text-xs font-extrabold uppercase tracking-wider text-amber-500">Tela 1 &mdash; Reconhecendo a Janela do Programa</span>
             <h2 class="text-2xl lg:text-3xl font-extrabold">Tela do Fusion 360: Onde Fica Cada Menu e Botão</h2>
           </div>
-          <span class="loc-badge">&#x1F5A5;&#xFE0F; Os textos da tela mudam ao clicar em EN (1) ou PT (2)!</span>
+          <span class="loc-badge">&#x1F5A5;&#xFE0F; Os textos da tela mudam ao clicar em EN ou PT!</span>
         </div>
 
         <div class="f360-window">
@@ -298,7 +379,7 @@
               <span class="px-2 py-0.5 rounded bg-neutral-700 text-neutral-200">
                 &#x1F4BE; <span class="f-term" data-en="Save (Ctrl+S)" data-pt="Salvar (Ctrl+S)"></span>
               </span>
-              <span class="ml-3 px-2.5 py-0.5 rounded-t bg-neutral-700 text-amber-400 font-bold border-t border-x border-neutral-500">
+              <span class="px-2.5 py-0.5 rounded-t bg-neutral-700 text-amber-400 font-bold border-t border-x border-neutral-500">
                 &#x1F4DA; Minha_Biblioteca.lbr*
               </span>
             </div>
@@ -306,12 +387,11 @@
           </div>
 
           <div class="f360-ribbon">
-            <div class="flex items-center gap-4 flex-wrap">
+            <div class="flex items-center gap-3 flex-wrap">
               <span class="px-2.5 py-1 rounded bg-neutral-800 text-amber-400 font-bold f360-callout">
                 [C] <span class="f-term" data-en="LIBRARY" data-pt="BIBLIOTECA"></span>
               </span>
               <span class="text-neutral-400 font-semibold f-term" data-en="MANAGE" data-pt="GERENCIAR"></span>
-              <div class="h-4 w-px bg-neutral-600"></div>
               <span class="px-2 py-0.5 rounded bg-emerald-600/30 border border-emerald-500 text-emerald-300 font-bold">
                 + <span class="f-term" data-en="New Component" data-pt="Novo Componente"></span>
               </span>
@@ -348,7 +428,7 @@
 
             <div class="md:col-span-9 bg-[#2d2d2d] border border-neutral-600 rounded p-2">
               <div class="text-amber-400 font-bold mb-1.5">[D] <span class="f-term" data-en="Library Content (4 Columns)" data-pt="Conteúdo da Biblioteca (4 Colunas)"></span>:</div>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
                 <div class="bg-[#1f1f1f] border-2 border-amber-500 rounded p-2">
                   <div class="font-bold text-amber-400 f-term" data-en="1. Components" data-pt="1. Componentes"></div>
                   <div class="mt-1 p-1 rounded bg-neutral-800 font-mono text-[11px]">ESP32-WROOM</div>
@@ -464,7 +544,7 @@
             <span class="text-sm font-extrabold uppercase tracking-wider text-amber-500">Passo 1</span>
             <h2 class="text-2xl lg:text-3xl font-extrabold mt-0.5">Onde Baixar a Simbologia e o Arquivo 3D</h2>
           </div>
-          <span class="loc-badge">&#x1F310; Clique nos links abaixo para abrir os portais</span>
+          <span class="loc-badge">&#x1F310; Toque nos cartões para abrir os sites</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -579,7 +659,6 @@
               <span class="px-2.5 py-0.5 rounded bg-amber-500 text-black font-extrabold f360-callout">
                 [3] <span class="f-term" data-en="MESH &rarr; Modify &rarr; Convert Mesh" data-pt="MALHA &rarr; Modificar &rarr; Converter malha"></span>
               </span>
-              <div class="h-4 w-px bg-neutral-500"></div>
               <span class="px-2.5 py-0.5 rounded bg-blue-600 text-white font-extrabold f360-callout">
                 [1] <span class="f-term" data-en="Insert &rarr; Insert Mesh (.STL)" data-pt="Inserir &rarr; Inserir malha (.STL)"></span>
               </span>
@@ -737,7 +816,6 @@
               <span class="px-2.5 py-1 rounded bg-purple-600 text-white font-extrabold f360-callout">
                 [4] &#x1F4E6; <span class="f-term" data-en="Push to 3D PCB" data-pt="Enviar para PCB 3D"></span>
               </span>
-              <div class="h-4 w-px bg-neutral-500"></div>
               <span class="px-2.5 py-1 rounded bg-blue-600 text-white font-extrabold f360-callout">
                 [3] &#x2795; <span class="f-term" data-en="Place Component" data-pt="Inserir componente"></span>
               </span>
@@ -833,7 +911,7 @@
             <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Verificação e Resumo de Conteúdo</span>
             <h2 class="text-2xl lg:text-3xl font-extrabold">Quiz Final: 10 Perguntas sobre Biblioteca PCB &amp; 3D</h2>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
             <span id="quiz-score-badge" class="px-3 py-1 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-extrabold text-sm">
               Acertos: 0 / 10
             </span>
@@ -870,17 +948,23 @@
 
     </div>
 
-    <!-- Bottom Navigation Controls (Visível no Modo Slides) -->
+    <!-- Bottom Navigation Controls (Adaptável para Desktop e Smartphone) -->
     <div id="bottom-nav-bar" class="border-t-2 border-[var(--border)] px-6 py-3 flex items-center justify-between bg-[var(--background)]/80 shrink-0">
       <div class="flex items-center gap-2.5" id="dots-container"></div>
-      <div class="text-xs font-semibold text-[var(--muted-foreground)] hidden xl:block">
-        Atalhos: <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">&larr;</kbd> <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">&rarr;</kbd> Slides &nbsp;|&nbsp; <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">G</kbd> Guia Atrasados &nbsp;|&nbsp; <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">Q</kbd> Quiz &nbsp;|&nbsp; <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">1/2/3</kbd> Idioma &nbsp;|&nbsp; <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">T</kbd> Tema
+      <div class="desktop-only-ctrl text-xs font-semibold text-[var(--muted-foreground)] hidden xl:block">
+        Atalhos: <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">&larr;</kbd> <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">&rarr;</kbd> Slides &nbsp;|&nbsp; <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">G</kbd> Guia &nbsp;|&nbsp; <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">Q</kbd> Quiz &nbsp;|&nbsp; <kbd class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">1/2/3</kbd> Idioma
       </div>
-      <div class="flex items-center gap-3">
-        <button id="prev-btn" onclick="changeSlide(-1)" class="px-5 py-2 rounded-xl text-sm font-bold border-2 border-[var(--border)] bg-[var(--card)] hover:bg-[var(--border)]/60 disabled:opacity-40 disabled:pointer-events-none transition">
+      <div id="mobile-bottom-actions" class="flex items-center gap-2">
+        <button id="prev-btn" onclick="changeSlide(-1)" class="px-4 py-2 rounded-xl text-xs md:text-sm font-bold border-2 border-[var(--border)] bg-[var(--card)] hover:bg-[var(--border)]/60 disabled:opacity-40 disabled:pointer-events-none transition">
           &larr; Anterior
         </button>
-        <button id="next-btn" onclick="changeSlide(1)" class="px-6 py-2 rounded-xl text-sm font-extrabold bg-amber-500 text-black hover:bg-amber-400 disabled:opacity-40 disabled:pointer-events-none transition">
+        <button onclick="toggleQuickGuide()" class="md:hidden px-3 py-2 rounded-xl text-xs font-extrabold bg-rose-500 text-white">
+          &#x1F198; Guia
+        </button>
+        <button onclick="goToSlide(9)" class="md:hidden px-3 py-2 rounded-xl text-xs font-extrabold bg-emerald-600 text-white">
+          &#x1F3AF; Quiz
+        </button>
+        <button id="next-btn" onclick="changeSlide(1)" class="px-5 py-2 rounded-xl text-xs md:text-sm font-extrabold bg-amber-500 text-black hover:bg-amber-400 disabled:opacity-40 disabled:pointer-events-none transition">
           Próximo &rarr;
         </button>
       </div>
@@ -888,20 +972,42 @@
 
   </div>
 
+  <!-- MODAL QR CODE PARA SMARTPHONE -->
+  <div id="qr-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-[var(--card)] text-[var(--foreground)] border-2 border-purple-500 rounded-2xl shadow-2xl p-6 text-center space-y-4">
+      <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
+        <span class="font-extrabold text-lg text-purple-400">&#x1F4F1; Abrir no Smartphone da Turma</span>
+        <button onclick="toggleQrModal()" class="px-2.5 py-1 rounded-lg bg-[var(--background)] font-bold text-xs">&#x2715; Fechar</button>
+      </div>
+      <p class="text-xs text-[var(--muted-foreground)]">
+        Aponte a câmera do celular para o QR Code abaixo para abrir a aula diretamente no <strong>Módulo Smartphone</strong>:
+      </p>
+      <div class="bg-white p-4 rounded-2xl inline-block mx-auto shadow-inner">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://epaminondassilva.github.io/Fusion-360---Aula-Como-Criar-Biblioteca-PCB/" alt="QR Code da Aula" class="w-48 h-48 mx-auto" />
+      </div>
+      <div class="text-xs font-mono text-amber-400 break-all bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
+        https://epaminondassilva.github.io/Fusion-360---Aula-Como-Criar-Biblioteca-PCB/
+      </div>
+      <div class="text-xs text-[var(--muted-foreground)] font-bold">
+        Prof. Epaminondas A. da Silva
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL FLUTUANTE ASSÍNCRONO PARA ALUNOS ATRASADOS -->
-  <div id="quick-guide-modal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-6">
+  <div id="quick-guide-modal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4 md:p-6">
     <div class="w-full max-w-5xl bg-[var(--card)] text-[var(--foreground)] border-2 border-amber-500 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-      <div class="px-6 py-4 bg-amber-500 text-black flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <span class="text-xl font-extrabold">&#x1F198; Guia Rápido Assíncrono &mdash; Telas e Posições Exatas no Fusion 360</span>
+      <div class="px-5 py-3.5 bg-amber-500 text-black flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-base md:text-xl font-extrabold">&#x1F198; Guia Rápido Assíncrono &mdash; Telas e Posições Exatas</span>
         </div>
-        <button onclick="toggleQuickGuide()" class="px-3 py-1 rounded-lg bg-black/20 hover:bg-black/30 font-extrabold text-sm">
-          &#x2715; Fechar (G ou ESC)
+        <button onclick="toggleQuickGuide()" class="px-3 py-1 rounded-lg bg-black/20 hover:bg-black/30 font-extrabold text-xs md:text-sm">
+          &#x2715; Fechar
         </button>
       </div>
-      <div class="p-6 overflow-y-auto space-y-4 text-sm">
-        <p class="text-[var(--muted-foreground)] font-medium">
-          Chegou atrasado ou perdeu onde clicar? Veja abaixo o resumo de cada etapa e clique em <strong>"Abrir Tela"</strong> para ver a janela correspondente do Fusion 360:
+      <div class="p-5 overflow-y-auto space-y-4 text-sm">
+        <p class="text-[var(--muted-foreground)] font-medium text-xs md:text-sm">
+          Chegou atrasado ou perdeu onde clicar? Veja abaixo o resumo de cada etapa e toque em <strong>"Abrir Tela"</strong> para ver a janela correspondente do Fusion 360:
         </p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -987,7 +1093,7 @@
     let currentZoom = 1.3;
     let currentFusionLang = 'en';
     let isLightMode = false;
-    let currentViewMode = 'slides'; // 'slides' | 'website'
+    let currentViewMode = 'slides'; // 'slides' | 'mobile' | 'website'
 
     const slides = document.querySelectorAll('.slide');
     const totalSlides = slides.length;
@@ -1001,17 +1107,24 @@
     const langBadge = document.getElementById('fusion-lang-badge');
     const themeBtn = document.getElementById('theme-btn');
     const quickGuideModal = document.getElementById('quick-guide-modal');
+    const qrModal = document.getElementById('qr-modal');
+
+    function toggleQrModal() {
+      qrModal.classList.toggle('hidden');
+    }
 
     function setViewMode(mode) {
       currentViewMode = mode;
-      document.body.classList.toggle('mode-slides', mode === 'slides');
-      document.body.classList.toggle('mode-website', mode === 'website');
+      document.body.classList.remove('mode-slides', 'mode-mobile', 'mode-website');
+      document.body.classList.add(`mode-${mode}`);
 
-      const activeBtn = 'px-2.5 py-1 rounded-lg text-xs font-extrabold transition bg-blue-500 text-white';
-      const inactiveBtn = 'px-2.5 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]';
+      const activeBtn = 'px-2 py-1 rounded-lg text-xs font-extrabold transition bg-blue-500 text-white';
+      const inactiveBtn = 'px-2 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]';
 
       document.getElementById('btn-mode-slides').className = mode === 'slides' ? activeBtn : inactiveBtn;
+      document.getElementById('btn-mode-mobile').className = mode === 'mobile' ? activeBtn : inactiveBtn;
       document.getElementById('btn-mode-website').className = mode === 'website' ? activeBtn : inactiveBtn;
+
       updateUI();
     }
 
@@ -1248,9 +1361,7 @@
     function toggleTheme() {
       isLightMode = !isLightMode;
       document.documentElement.classList.toggle('light-mode', isLightMode);
-      themeBtn.innerHTML = isLightMode
-        ? '&#x1F319; Escuro (T)'
-        : '&#x2600;&#xFE0F; Claro (T)';
+      themeBtn.innerHTML = isLightMode ? '&#x1F319;' : '&#x2600;&#xFE0F;';
     }
 
     function setFusionLang(lang) {
@@ -1268,19 +1379,19 @@
         }
       });
 
-      const activeClass = 'px-2.5 py-1 rounded-lg text-xs font-extrabold transition bg-amber-500 text-black';
-      const inactiveClass = 'px-2.5 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]';
+      const activeClass = 'px-2 py-1 rounded-lg text-xs font-extrabold transition bg-amber-500 text-black';
+      const inactiveClass = 'px-2 py-1 rounded-lg text-xs font-bold transition text-[var(--muted-foreground)] hover:text-[var(--foreground)]';
 
       document.getElementById('btn-lang-en').className = lang === 'en' ? activeClass : inactiveClass;
       document.getElementById('btn-lang-pt').className = lang === 'pt' ? activeClass : inactiveClass;
       document.getElementById('btn-lang-both').className = lang === 'both' ? activeClass : inactiveClass;
 
       if (lang === 'en') {
-        langBadge.textContent = 'Interface do Fusion 360: Inglês (EN)';
+        langBadge.textContent = 'Fusion: EN';
       } else if (lang === 'pt') {
-        langBadge.textContent = 'Interface do Fusion 360: Português (PT-BR)';
+        langBadge.textContent = 'Fusion: PT-BR';
       } else {
-        langBadge.textContent = 'Interface do Fusion 360: Inglês + Português (Ambos)';
+        langBadge.textContent = 'Fusion: EN + PT';
       }
     }
 
@@ -1304,15 +1415,18 @@
 
     function updateUI() {
       slides.forEach((s, idx) => {
-        s.classList.toggle('hidden', currentViewMode === 'slides' && idx !== currentSlide);
+        s.classList.toggle('hidden', currentViewMode !== 'website' && idx !== currentSlide);
       });
-      counterEl.textContent = currentViewMode === 'slides'
-        ? `Slide ${currentSlide + 1} / ${totalSlides}`
-        : `Apostila Completa (${totalSlides} Seções)`;
+      counterEl.textContent = currentViewMode === 'website'
+        ? `Apostila (${totalSlides})`
+        : `${currentSlide + 1} / ${totalSlides}`;
       progressEl.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
       prevBtn.disabled = currentSlide === 0;
       nextBtn.disabled = currentSlide === totalSlides - 1;
       renderDots();
+      if (currentViewMode === 'mobile') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
 
     function changeSlide(delta) {
@@ -1340,19 +1454,34 @@
       }
     }
 
+    // Suporte a Gesto de Deslizar (Swipe) no Smartphone
+    let touchStartX = 0;
+    let touchEndX = 0;
+    document.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    document.addEventListener('touchend', e => {
+      touchEndX = e.changedTouches[0].screenX;
+      if (currentViewMode !== 'website' && Math.abs(touchEndX - touchStartX) > 65) {
+        if (touchEndX < touchStartX) changeSlide(1);
+        if (touchEndX > touchStartX) changeSlide(-1);
+      }
+    }, { passive: true });
+
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !quickGuideModal.classList.contains('hidden')) {
-        toggleQuickGuide();
+      if (e.key === 'Escape') {
+        quickGuideModal.classList.add('hidden');
+        qrModal.classList.add('hidden');
         return;
       }
       if (e.key === 'g' || e.key === 'G') {
         toggleQuickGuide();
         return;
       }
-      if (!quickGuideModal.classList.contains('hidden')) return;
+      if (!quickGuideModal.classList.contains('hidden') || !qrModal.classList.contains('hidden')) return;
 
-      if (e.key === 'ArrowRight' && currentViewMode === 'slides') changeSlide(1);
-      if (e.key === 'ArrowLeft' && currentViewMode === 'slides') changeSlide(-1);
+      if (e.key === 'ArrowRight' && currentViewMode !== 'website') changeSlide(1);
+      if (e.key === 'ArrowLeft' && currentViewMode !== 'website') changeSlide(-1);
       if (e.key === 'f' || e.key === 'F') toggleFullScreen();
       if (e.key === 't' || e.key === 'T') toggleTheme();
       if (e.key === 'q' || e.key === 'Q') goToSlide(9);
@@ -1363,9 +1492,14 @@
       if (e.key === '3') setFusionLang('both');
     });
 
+    // Auto-detecta se abriu em um Smartphone
+    if (window.innerWidth < 768) {
+      setViewMode('mobile');
+    } else {
+      setViewMode('slides');
+    }
     setFusionLang('en');
     renderQuiz();
-    updateUI();
   </script>
 </body>
 </html>
